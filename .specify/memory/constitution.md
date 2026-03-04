@@ -1,50 +1,62 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report - Constitution v1.0.0 (Initial Creation)
+- Version change: TEMPLATE → v1.0.0 
+- New project: AIEngine C++ Game Engine
+- Initial principles established for learning-focused game engine development
+- Templates requiring updates: ✅ All validated during initial setup
+- Follow-up TODOs: None
+-->
+
+# AIEngine Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Modern C++ First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All code MUST utilize modern C++ standards (C++17 minimum, C++20 preferred) and follow established best practices. Smart pointers are mandatory for memory management. Raw pointers allowed only for non-owning references. RAII principles must be followed throughout the codebase.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: Modern C++ features improve safety, performance, and maintainability while serving the educational goal of learning current C++ practices.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Cross-Platform Compatibility
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+All engine components MUST build and run consistently across Windows, macOS, and Linux. Platform-specific code must be clearly isolated and abstracted through unified interfaces. OpenGL is the mandated graphics API for cross-platform rendering.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: Cross-platform compatibility ensures broader learning opportunities and demonstrates proper abstraction techniques essential in game engine architecture.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Component-Driven Architecture (NON-NEGOTIABLE)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+The engine MUST follow component-based design patterns. Systems operate on components, not inheritance hierarchies. Entity-Component-System (ECS) architecture is preferred for game objects. Clear separation between engine core and game-specific logic is mandatory.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: Component-driven design scales better than inheritance hierarchies and teaches fundamental game engine architecture patterns.
+
+### IV. Performance-Conscious Development
+
+All core engine systems MUST be designed with performance in mind. Frame rate targets of 60fps minimum for simple scenes. Memory allocations during runtime should be minimized. Profiling tools must be integrated for performance measurement and optimization.
+
+**Rationale**: Performance awareness is critical in game engine development and teaches optimization principles essential for real-time graphics programming.
+
+### V. Test-Driven Learning
+
+Unit tests are mandatory for all engine subsystems. Integration tests required for system interactions. Each feature must include example usage demonstrating the concept being learned. Documentation must explain both "what" and "why" for educational value.
+
+**Rationale**: Testing ensures code quality while examples and documentation reinforce learning objectives and demonstrate proper usage patterns.
+
+## Build System Standards
+
+**Build Tool**: GNU Make is the mandated build system for simplicity and cross-platform support.
+**Dependencies**: Minimal external dependencies; prefer standard library and well-established libraries (SDL2, GLEW/GLAD).
+**Configuration**: Project must build with standard make commands without complex setup procedures.
+**Toolchain**: Support for GCC, Clang, and MSVC compilers across target platforms.
+
+## Development Workflow
+
+**Version Control**: Git with descriptive commit messages following conventional commits format.
+**Code Organization**: Clear directory structure separating engine core, examples, tests, and documentation.
+**Code Reviews**: All changes must be reviewed for adherence to modern C++ practices and architecture principles.
+**Documentation**: Each major system requires architectural documentation explaining design decisions and learning outcomes.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution supersedes all other development practices. Any deviations must be documented and justified. Amendments require clear rationale and migration plan for existing code. All features and modifications must demonstrate alignment with the learning objectives of modern C++ and game engine architecture.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-03-03 | **Last Amended**: 2026-03-03
