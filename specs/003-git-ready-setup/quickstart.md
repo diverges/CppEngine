@@ -7,6 +7,7 @@
 ## Prerequisites ✅
 
 Before starting, ensure you have:
+
 - **Git** installed and configured
 - **MSYS2** with MinGW-w64 toolchain installed
 - **VS Code** with C++ extension pack
@@ -29,6 +30,7 @@ make debug
 ```
 
 **Expected Output**:
+
 ```
 Building engine...
 ✓ Engine library: bin/debug/libAIEngine.a
@@ -45,8 +47,9 @@ code .
 ```
 
 **What happens automatically**:
+
 - ✅ IntelliSense activates for all C++ files
-- ✅ Build tasks available via Ctrl+Shift+P → "Run Build Task" 
+- ✅ Build tasks available via Ctrl+Shift+P → "Run Build Task"
 - ✅ Debug configurations ready for F5 debugging
 - ✅ Error highlighting works across all components
 
@@ -64,6 +67,7 @@ make run
 ```
 
 **Expected Results**:
+
 - Unit tests pass with results in `bin/debug/test-results/`
 - TestGame window opens and displays basic graphics
 - No compilation errors or missing dependencies
@@ -169,6 +173,7 @@ make release EXTRA_CXXFLAGS="-pg"
 ### Multiple Workspaces
 
 The configuration supports multiple developers working on the same codebase:
+
 - Each developer can have personal VS Code settings
 - Build outputs are shared but intermediate files are per-component
 - Git ignores personal workspace customizations automatically
@@ -176,6 +181,7 @@ The configuration supports multiple developers working on the same codebase:
 ## Success Indicators
 
 After following this quickstart, you should achieve:
+
 - ✅ Complete build in under 10 minutes from clone
 - ✅ IntelliSense working with code completion and error detection  
 - ✅ Debugging functional with breakpoints in engine and testgame code
@@ -191,6 +197,7 @@ After following this quickstart, you should achieve:
 ## Support
 
 If you encounter issues not covered in troubleshooting:
+
 1. Check that your environment meets prerequisites listed above
 2. Verify that existing builds work if cloning after initial setup
 3. Consult team documentation or reach out for assistance

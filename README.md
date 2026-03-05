@@ -56,67 +56,140 @@ brew install sdl2 glew glm
 xcode-select --install
 ```
 
-## 🔧 Build Instructions
+## 🔧 Build Instructions - New Unified Workflow
 
-### Quick Build & Run
+### Quick Build & Run (Root Makefile)
 
 ```bash
 # 1. Clone repository
 git clone <repository-url> AIEngine
 cd AIEngine
 
-# 2. Build engine library (creates libAIEngine.a)
-cd engine
-make clean && make
-# ✅ Output: lib/libAIEngine.a created
+# 2. Verify environment (optional but recommended)
+make check-env
 
-# 3. Build test game (links to engine)
-cd ../testgame  
-make clean && make
-# ✅ Output: bin/testgame.exe created
+# 3. Build entire project (engine + testgame) 
+make debug
+# ✅ Output: bin/debug/libAIEngine.a and bin/debug/testgame.exe
 
 # 4. Run the demo
 make run
 # 🎮 Opens window with rotating 3D cube at 144+ FPS
 ```
 
+### Available Commands
+
+```bash
+# Build Commands
+make debug     # Build debug variant (default)
+make release   # Build release variant
+make all       # Build all components  
+make engine    # Build engine library only
+make testgame  # Build testgame (includes engine dependency)
+
+# Test Commands
+make test             # Run all tests (unit + integration)
+make test-unit        # Run engine unit tests only  
+make test-integration # Run integration tests (testgame execution)
+
+# Utility Commands
+make run       # Execute testgame
+make clean     # Remove all build artifacts
+make info      # Show build configuration  
+make help      # Show all available targets
+```
+
 ### Build Configurations
 
 ```bash
-# Development build (debug symbols, no optimization)
+# Development build (debug symbols, optimizations disabled)
 make debug
 
-# Production build (optimized, no debug info)  
+# Production build (optimized, debug symbols removed)  
 make release
 
-# Full rebuild
+# Clean and rebuild everything
+make clean && make debug
+
+# Individual component builds (if needed)
+make engine     # Engine library only
+make testgame   # TestGame only (builds engine first)
+```
+
+### Output Structure
+
+After building, artifacts are organized in centralized directories:
+
+```
+bin/
+├── debug/           # Debug build outputs
+│   ├── libAIEngine.a     # Engine static library
+│   ├── testgame.exe      # TestGame executable  
+│   └── engine_tests.exe  # Unit tests (when available)
+└── release/         # Release build outputs
+    ├── libAIEngine.a
+    ├── testgame.exe
+    └── engine_tests.exe
+```
+
+### Legacy Component Build (Still Supported)
+
+For component-isolated development, individual builds remain available:
+
+```bash
+# Engine library only (legacy method)
+cd engine
 make clean && make
 
-# Parallel build (faster on multi-core)
-make -j4
+# TestGame only (legacy method)
+cd testgame  
+make clean && make
 ```
 
 ### Verify Installation
 
 ```bash
-# Check engine library
-cd engine && make && ls -la lib/
-# Should show: libAIEngine.a (significant file size)
+# 1. Check environment setup
+make check-env
+# Should show: g++ and make found in PATH
 
-# Test executable
-cd ../testgame && make && ./bin/testgame
+# 2. Test complete build system  
+make debug
+# Expected output:
+# - "Building engine (debug)..."
+# - "Built engine library: bin/debug/libAIEngine.a"
+# - "Building testgame (debug)..."  
+# - "Built test game: bin/debug/testgame.exe"
+
+# 3. Test execution
+make run
 # Expected output:
 # - Window opens (1280x720)
-# - 3D cube rotating smoothly
-# - FPS counter showing 60+ FPS
-# - Press ESC to exit
+# - 3D cube rotating smoothly  
+# - FPS counter showing 144+ FPS
+# - Press ESC to exit cleanly
+
+# 4. Verify output structure
+ls bin/debug/
+# Should show: libAIEngine.a, testgame.exe
 ```
 
-## 📁 Project Structure
+## 📁 Project Structure - Git Ready Multi-Developer Layout
 
 ```
-AIEngine/
-├── engine/                     # 🎯 Core engine library (libAIEngine.a)
+AIEngine/                       # 🎯 Repository root with unified build system
+├── Makefile                   # 🔧 Root build orchestration (NEW)
+├── bin/                       # 📦 Centralized build outputs (NEW)  
+│   ├── debug/                 # Debug build artifacts
+│   │   ├── libAIEngine.a      # Engine static library
+│   │   ├── testgame.exe       # TestGame executable
+│   │   └── engine_tests.exe   # Unit tests (when available)
+│   └── release/               # Release build artifacts
+│       ├── libAIEngine.a      
+│       ├── testgame.exe       
+│       └── engine_tests.exe   
+│
+├── engine/                     # 🎯 Core engine library  
 │   ├── src/                   
 │   │   ├── core/              # Engine lifecycle, initialization
 │   │   ├── scene/             # Scene graph, hierarchy management  
@@ -125,30 +198,98 @@ AIEngine/
 │   │   ├── math/              # GLM math utilities, transforms
 │   │   └── platform/          # SDL2 windowing, input abstraction
 │   ├── include/AIEngine/      # 📚 Public API headers
+│   ├── deps/                  # 📦 Dependencies (SDL2, GLEW, GLM, doctest)
 │   ├── shaders/               # 🎨 GLSL vertex/fragment shaders
-│   ├── lib/                   # 📦 Built engine library
-│   └── Makefile               # 🔧 Engine build system
+│   ├── build/                 # 🔨 Intermediate build files
+│   └── Makefile               # 🔧 Engine component build (MODIFIED)
 │
 ├── testgame/                   # 🎮 Example game application  
 │   ├── src/                   # Game implementation
 │   │   ├── main.cpp           # Application entry point
 │   │   ├── TestGame.hpp       # Game class header
 │   │   └── TestGame.cpp       # Game logic, scene setup
-│   ├── bin/                   # 🎯 Game executable  
-│   └── Makefile               # 🔧 Game build (links engine)
+│   ├── build/                 # 🔨 Intermediate build files
+│   └── Makefile               # 🔧 Game component build (MODIFIED)
 │
 ├── tests/                      # 🧪 Testing infrastructure
-│   ├── unit/                  # Component unit tests
-│   ├── integration/           # Engine integration tests
-│   └── Makefile               # Test framework (Doctest)
-│
-├── docs/                      # 📖 Documentation
-│   ├── architecture.md       # System design documentation
-│   └── examples/              # Code usage examples
-│
-└── specs/                     # 📋 Project specifications
-    └── 001-bootstrap-project/ # Implementation planning docs
+├── docs/                      # 📖 Architecture and API documentation
+└── specs/                     # 📋 Project specifications and features
 ```
+
+## 🛠️ VS Code Development Setup (NEW)
+
+The project now includes complete VS Code integration for professional C++ development:
+
+### Automatic Setup
+
+```bash
+# Open workspace in VS Code
+code .
+```
+
+**What happens automatically**:
+
+- ✅ **IntelliSense**: Auto-completion and code navigation for engine and game code
+- ✅ **Debugging**: F5 debugging with GDB integration
+- ✅ **Build Tasks**: Ctrl+Shift+P → "Run Task" for unified builds
+- ✅ **Code Navigation**: Go to definition/declaration across components
+
+### VS Code Features
+
+#### 🐛 Debugging Experience - User Story 5
+
+**One-Click Debugging**: Press `F5` to start debugging testgame.exe:
+
+- ✅ Automatic debug build of engine and testgame  
+- ✅ Breakpoints work in both engine and testgame source files
+- ✅ Variable inspection for engine objects and game state
+- ✅ Debug console with C++ expression evaluation
+- ✅ Integrated terminal shows application output
+
+**Debug Configurations Available**:
+
+- `Debug TestGame` - Main debugging target (testgame.exe)
+- `Debug Engine Tests` - Unit test debugging (engine_tests.exe when available)
+
+#### 🧠 IntelliSense & Code Navigation - User Story 4
+
+**What works out-of-the-box**:
+
+- ✅ Auto-completion for AIEngine namespace and all public APIs
+- ✅ Error highlighting and syntax validation
+- ✅ Go to Definition (F12) across engine headers and source files  
+- ✅ Find All References (Shift+F12) for functions, classes, variables
+- ✅ Header/source switching (Alt+O) for rapid navigation
+- ✅ Symbol search (Ctrl+T) across entire project
+
+**IntelliSense Coverage**:
+
+- Engine public API (`include/AIEngine/`)
+- Component system (`components/`, `core/`)  
+- Graphics pipeline (`graphics/`, `shaders/`)
+- Math utilities (`math/Transform.hpp`)
+- TestGame implementation (`testgame/src/`)
+
+### Development Workflow
+
+```bash
+# 1. Open workspace
+code .
+
+# 2. Make changes to engine or testgame code  
+# IntelliSense provides real-time feedback
+
+# 3. Debug your changes
+# Press F5 → automatic build → debugging starts
+
+# 4. Set breakpoints and inspect
+# Variables panel shows complete engine state
+
+# 5. Build explicitly if needed
+# Ctrl+Shift+P → "Tasks: Run Task" → "Make: Engine Debug"
+```
+
+**Prerequisites**: VS Code with C++ extension pack installed
 
 ## 🎯 Engine API Overview
 
@@ -301,6 +442,7 @@ make clean         # Clean artifacts
 ### Common Build Issues
 
 **Problem**: Missing SDL2/GLEW headers
+
 ```bash
 # Solution: Install development packages
 pacman -S mingw-w64-x86_64-sdl2 mingw-w64-x86_64-glew  # Windows
@@ -308,6 +450,7 @@ sudo apt install libsdl2-dev libglew-dev               # Linux
 ```
 
 **Problem**: Runtime crashes
+
 ```bash
 # Solution: Check graphics drivers
 # Update to latest NVIDIA/AMD drivers

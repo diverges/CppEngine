@@ -14,6 +14,7 @@
 - Q: IDE configuration scope - what extent of IDE configuration should be included in the repository? → A: Focus entirely on VS Code
 - Q: Standard development hardware definition - what hardware specifications should build time expectations target? → A: At least mid range laptop
 - Q: Test execution strategy - how should different test types be organized and executed from root commands? → A: Separate commands for unit tests and integration tests
+- Q: Individual component build capability - should the root makefile provide commands for building individual components? → A: Root makefile should contain commands for building only engine or only testgame
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -62,6 +63,7 @@ Developers can build the entire project (engine + testgame) using a single comma
 2. **Given** changes to engine code, **When** developer runs the root build command, **Then** the engine is rebuilt and testgame is automatically rebuilt to use the updated engine
 3. **Given** a developer wants to clean the project, **When** they run the root clean command, **Then** both engine and testgame build artifacts are removed completely
 4. **Given** a developer wants to run tests, **When** they execute the root unit test command, **Then** all engine unit tests are executed and results are reported
+5. **Given** a need to build only one component, **When** developer runs individual component build commands from root, **Then** only the specified component (engine or testgame) is built successfully
 
 ---
 
@@ -129,7 +131,8 @@ Developers can immediately debug the project using standard tools without additi
 - **FR-016**: Build artifacts MUST be organized in root `bin/` directory with build type subdirectories (e.g., `bin/debug/`, `bin/release/`) using flat file structure
 - **FR-017**: Dependencies MUST maintain single stable versions that are updated together with toolchain requirements
 - **FR-018**: VS Code workspace MUST include complete configuration for C++ development (tasks, debugging, IntelliSense) without requiring additional setup
-- **FR-019**: Test execution MUST provide separate commands for unit tests and integration tests that can be run independently
+- **FR-019**: Test execution MUST provide separate commands for unit tests and integration tests that can be run independently  
+- **FR-020**: Root-level build system MUST provide individual component build commands to build only engine or only testgame when needed
 
 ### Key Entities
 
