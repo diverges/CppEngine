@@ -1,0 +1,49 @@
+{
+    "configurations": [
+        {
+            "name": "AIEngine-Windows",
+            "includePath": [
+                "${workspaceFolder}/engine/include",
+                "${workspaceFolder}/engine/include/AIEngine",
+                "${workspaceFolder}/engine/deps/SDL2/include",
+                "${workspaceFolder}/engine/deps/glad/include",
+                "${workspaceFolder}/engine/deps/glm",
+                "${workspaceFolder}/engine/deps/doctest",
+                "${workspaceFolder}/engine/src",
+                "${workspaceFolder}/testgame/src",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "SDL_MAIN_HANDLED",
+                "WIN32",
+                "_WIN32",
+                "UNICODE", 
+                "_UNICODE",
+                "GLM_ENABLE_EXPERIMENTAL",
+                "_DEBUG"
+            ],
+            "compilerPath": "g++",
+            "cStandard": "c17",
+            "cppStandard": "c++17", 
+            "intelliSenseMode": "gcc-x64",
+            "compilerArgs": [
+                "-Wall",
+                "-Wextra",
+                "-Wpedantic",
+                "-std=c++17"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/engine/include",
+                    "${workspaceFolder}/engine/src", 
+                    "${workspaceFolder}/testgame/src",
+                    "${workspaceFolder}/engine/deps"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
+            },
+            "configurationProvider": "ms-vscode.makefile-tools"
+        }
+    ],
+    "version": 4
+}

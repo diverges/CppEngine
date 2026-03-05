@@ -1,0 +1,189 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Debug (All)",
+            "type": "shell",
+            "command": "make",
+            "args": ["debug"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Build Release (All)",
+            "type": "shell", 
+            "command": "make",
+            "args": ["release"],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Build Engine Only (Debug)",
+            "type": "shell",
+            "command": "make", 
+            "args": ["debug-engine"],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build Engine Only (Release)",
+            "type": "shell",
+            "command": "make",
+            "args": ["release-engine"],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build TestGame Only (Debug)",
+            "type": "shell",
+            "command": "make", 
+            "args": ["debug-testgame"],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Build TestGame Only (Release)", 
+            "type": "shell",
+            "command": "make",
+            "args": ["release-testgame"],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run TestGame",
+            "type": "shell",
+            "command": "make",
+            "args": ["run"],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always", 
+                "focus": true,
+                "panel": "new"
+            },
+            "dependsOn": "Build Debug (All)"
+        },
+        {
+            "label": "Run Unit Tests",
+            "type": "shell",
+            "command": "make",
+            "args": ["test-unit"],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run Integration Tests",
+            "type": "shell",
+            "command": "make",
+            "args": ["test-integration"],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Run All Tests",
+            "type": "shell",
+            "command": "make",
+            "args": ["test"],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Clean All",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean"],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Build Engine Tests",
+            "type": "shell",
+            "command": "make",
+            "args": ["engine-tests"],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Check Environment",
+            "type": "shell",
+            "command": "make",
+            "args": ["check-env"],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        }
+    ]
+}
