@@ -3,40 +3,34 @@
 
 ## C++ Build Outputs
 *.o
-*.a
-*.so
+*.obj
+*.res
+*.pdb
 *.exe
 *.dll
 *.dylib
-*.lib
-*.pdb
-*.obj
-*.res
 *.rlib
 *.rs.bk
 
-## Directories
+## Build Directories
 build/
 bin/
 obj/
 out/
 target/
 dist/
-lib/
 debug/
 release/
 
-## Engine-specific
+## Component-specific build outputs (but NOT deps)
 engine/lib/
 engine/build/
 testgame/bin/
 testgame/build/
 tests/build/
 
-## Dependencies
-engine/deps/*/
-deps/
-third-party/
+# Keep self-contained dependencies in engine/deps/
+# engine/deps/ is NOT ignored - we want these files in git
 
 ## IDE and Editor Files
 .vscode/
@@ -68,7 +62,3 @@ Thumbs.db
 *.trace
 core.*
 gmon.out
-
-# SDL2 platform-specific
-SDL2.dll
-SDL2.lib

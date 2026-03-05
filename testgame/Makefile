@@ -8,22 +8,67 @@ DEBUG_FLAGS := -g -DDEBUG -O0
 
 # Directories
 SRC_DIR := src
-BIN_DIR := bin
+# Use BIN_OUTPUT from root Makefile if available, otherwise default to local bin/
+ifdef BIN_OUTPUT
+    BIN_DIR := $(BIN_OUTPUT)
+else
+    BIN_DIR := bin
+endif
 BUILD_DIR := build
 ENGINE_DIR := ../engine
 
-# Detect MinGW system libraries (MSYS2) - force detection for now
-MSYS2_ROOT := C:/msys64/mingw64
-INCLUDE_DIRS := -I$(ENGINE_DIR)/include -I$(MSYS2_ROOT)/include
-LIBRARY_DIRS := -L$(ENGINE_DIR)/lib -L$(MSYS2_ROOT)/lib  
-LIBS := -lAIEngine -lSDL2main -lSDL2 -lopengl32 -lglew32 -lgdi32
+# Build variant handling (accepts VARIANT from root Makefile)
+VARIANT ?= debug
+ifeq ($(VARIANT),debug)
+    BUILD_FLAGS := $(DEBUG_FLAGS)
+else ifeq ($(VARIANT),release)  
+    BUILD_FLAGS := -DNDEBUG -O2
+else
+    BUILD_FLAGS := $(DEBUG_FLAGS)
+endif
+
+# Apply variant-specific build flags
+CXXFLAGS += $(BUILD_FLAGS)
+
+# Architecture and compiler detection for dependency selection
+TARGET_ARCH := $(shell g++ -dumpmachine)
+ifeq ($(TARGET_ARCH),)
+    # Fallback detection  
+    TARGET_ARCH := $(shell g++ -v 2>&1 | findstr "Target:" | cut -d' ' -f2)
+endif
+
+# Map target architecture to dependency path
+DEP_ARCH_PATH := unknown
+ifneq (,$(findstring x86_64-w64-mingw32,$(TARGET_ARCH)))
+    DEP_ARCH_PATH := windows-mingw64
+endif
+ifneq (,$(findstring i686-w64-mingw32,$(TARGET_ARCH)))
+    DEP_ARCH_PATH := windows-mingw32
+endif 
+ifneq (,$(findstring x86_64-pc-linux,$(TARGET_ARCH)))
+    DEP_ARCH_PATH := linux-x64
+endif
+
+# Self-contained project with architecture-aware dependencies
+INCLUDE_DIRS := -I$(ENGINE_DIR)/include -I$(ENGINE_DIR)/deps -I$(ENGINE_DIR)/deps/glm -I$(ENGINE_DIR)/deps/SDL2/include -I$(ENGINE_DIR)/deps/glad/include -I$(ENGINE_DIR)/deps/glew/include -I$(ENGINE_DIR)/deps/doctest
+
+# Library paths - engine library and architecture-aware dependencies
+ifdef BIN_OUTPUT
+    LIBRARY_DIRS := -L$(BIN_OUTPUT) -L$(ENGINE_DIR)/deps/SDL2/lib/$(DEP_ARCH_PATH) -L$(ENGINE_DIR)/deps/glew/lib/$(DEP_ARCH_PATH)
+    ENGINE_LIB_PATH := $(BIN_OUTPUT)/libAIEngine.a
+else
+    LIBRARY_DIRS := -L$(ENGINE_DIR)/lib -L$(ENGINE_DIR)/deps/SDL2/lib/$(DEP_ARCH_PATH) -L$(ENGINE_DIR)/deps/glew/lib/$(DEP_ARCH_PATH)
+    ENGINE_LIB_PATH := $(ENGINE_DIR)/lib/libAIEngine.a
+endif
+
+LIBS := -lAIEngine -lSDL2main -lSDL2 -lglew32 -lopengl32 -lgdi32
 
 # Source files
 SOURCES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJECTS := $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 
-# Target executable
-TARGET := $(BIN_DIR)/testgame
+# Target executable (Windows-compatible)
+TARGET := $(BIN_DIR)/testgame.exe
 
 # Default target
 all: $(TARGET)
@@ -43,14 +88,14 @@ else
 	mkdir -p $(BIN_DIR)
 endif
 
-# Check engine library exists (Windows-compatible)
+# Check engine library exists - now looks in correct location
 check-engine:
 ifeq ($(OS),Windows_NT)
-	@if not exist "$(ENGINE_DIR)\lib\libAIEngine.a" (echo "ERROR: Engine library not found. Run 'make' in engine/ directory first." && exit 1)
+	@if not exist "$(ENGINE_LIB_PATH)" (echo "ERROR: Engine library not found at $(ENGINE_LIB_PATH). Build engine first." && exit 1)
 else
-	@test -f $(ENGINE_DIR)/lib/libAIEngine.a || (echo "ERROR: Engine library not found. Run 'make' in engine/ directory first."; exit 1)
+	@test -f $(ENGINE_LIB_PATH) || (echo "ERROR: Engine library not found at $(ENGINE_LIB_PATH). Build engine first."; exit 1)
 endif
-	@echo "+ Engine library found"
+	@echo "+ Engine library found at $(ENGINE_LIB_PATH)"
 
 # Build executable
 $(TARGET): check-engine $(BIN_DIR) $(OBJECTS)
@@ -61,13 +106,11 @@ $(TARGET): check-engine $(BIN_DIR) $(OBJECTS)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 
-# Debug build
-debug: CXXFLAGS += $(DEBUG_FLAGS)
-debug: $(TARGET)
+# Build variant targets (called from root Makefile)
+# Flags are automatically applied via BUILD_FLAGS based on VARIANT variable  
+debug: all
 
-# Release build
-release: CXXFLAGS += -DNDEBUG
-release: $(TARGET)
+release: all
 
 # Clean build artifacts
 clean:

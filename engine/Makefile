@@ -5,33 +5,59 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -Wpedantic -O2
 
-# Installation prefix
-INSTALL_PREFIX := /usr/local
+# Installation prefix - environment-based for cross-machine compatibility
+INSTALL_PREFIX ?= /usr/local
 ifdef WINDIR
-    INSTALL_PREFIX := C:/AIEngine
+    INSTALL_PREFIX ?= $(USERPROFILE)/AIEngine
 endif
 
-# Detect MinGW system libraries (MSYS2)
-MSYS2_ROOT := C:/msys64/mingw64
-ifneq (,$(wildcard $(MSYS2_ROOT)/include))
-    INCLUDE_DIRS := -Iinclude -I$(MSYS2_ROOT)/include
-    LIB_DIRS := -L$(MSYS2_ROOT)/lib
-    LIBS := -lSDL2main -lSDL2 -lopengl32 -lglew32
-else
-    # Fallback to local deps
-    INCLUDE_DIRS := -Iinclude -Ideps -Ideps/SDL2/include -Ideps/glad/include
-    LIB_DIRS := 
-    LIBS := 
+# Architecture and compiler detection for dependency selection
+TARGET_ARCH := $(shell g++ -dumpmachine)
+ifeq ($(TARGET_ARCH),)
+    # Fallback detection
+    TARGET_ARCH := $(shell g++ -v 2>&1 | findstr "Target:" | cut -d' ' -f2)
 endif
+
+# Map target architecture to dependency path
+DEP_ARCH_PATH := unknown
+ifneq (,$(findstring x86_64-w64-mingw32,$(TARGET_ARCH)))
+    DEP_ARCH_PATH := windows-mingw64
+endif
+ifneq (,$(findstring i686-w64-mingw32,$(TARGET_ARCH)))
+    DEP_ARCH_PATH := windows-mingw32  
+endif
+ifneq (,$(findstring x86_64-pc-linux,$(TARGET_ARCH)))
+    DEP_ARCH_PATH := linux-x64
+endif
+
+# Self-contained project with architecture-aware dependencies
+INCLUDE_DIRS := -Iinclude -Ideps -Ideps/glm -Ideps/SDL2/include -Ideps/glad/include -Ideps/glew/include -Ideps/doctest
+LIB_DIRS := -Ldeps/SDL2/lib/$(DEP_ARCH_PATH) -Ldeps/glew/lib/$(DEP_ARCH_PATH)
+LIBS := -lSDL2main -lSDL2 -lglew32 -lopengl32 -lgdi32
 
 DEBUG_FLAGS := -g -DDEBUG -O0
 
 # Directories
 SRC_DIR := src
 INCLUDE_DIR := include
-LIB_DIR := lib
+# Use BIN_OUTPUT from root Makefile if available, otherwise default to local lib/
+ifdef BIN_OUTPUT
+    LIB_DIR := $(BIN_OUTPUT)
+else
+    LIB_DIR := lib
+endif
 BUILD_DIR := build
 DEPS_DIR := deps
+
+# Build variant handling (accepts VARIANT from root Makefile)
+VARIANT ?= debug
+ifeq ($(VARIANT),debug)
+    BUILD_FLAGS := $(DEBUG_FLAGS)
+else ifeq ($(VARIANT),release)  
+    BUILD_FLAGS := -DNDEBUG -O2
+else
+    BUILD_FLAGS := $(DEBUG_FLAGS)
+endif
 
 # Source files (explicitly listed for Windows compatibility)
 SOURCES := src/core/Engine.cpp \
@@ -52,8 +78,17 @@ DEPS := $(OBJECTS:.o=.d)
 # Target library
 TARGET := $(LIB_DIR)/libAIEngine.a
 
-# Default target
+# Test target (if tests exist)
+TEST_TARGET := $(LIB_DIR)/engine_tests.exe
+TEST_SOURCES := $(wildcard tests/unit/*.cpp)
+
+# Default target - automatically applies variant flags 
 all: $(TARGET)
+# Temporarily skip tests until dependency paths are fixed
+# all: $(TARGET) tests
+
+# Apply variant-specific build flags
+CXXFLAGS += $(BUILD_FLAGS)
 
 # Create directories (Windows-compatible)
 $(BUILD_DIR):
@@ -87,6 +122,17 @@ $(TARGET): $(LIB_DIR) $(OBJECTS)
 	ar rcs $(TARGET) $(OBJECTS)
 	@echo "Built engine library: $(TARGET)"
 
+# Build tests if test sources exist
+.PHONY: tests
+tests:
+ifneq ($(TEST_SOURCES),)
+	@echo "Building engine unit tests..."
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -Iinclude $(TEST_SOURCES) $(TARGET) -o $(TEST_TARGET)
+	@echo "Built engine tests: $(TEST_TARGET)"
+else
+	@echo "No unit tests found - skipping test build"
+endif
+
 # Compile source files with dependency generation
 $(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
 ifeq ($(OS),Windows_NT)
@@ -99,13 +145,11 @@ endif
 # Include dependencies
 -include $(DEPS)
 
-# Debug build
-debug: CXXFLAGS += $(DEBUG_FLAGS)
-debug: $(TARGET)
+# Build variant targets (called from root Makefile)  
+# Flags are automatically applied via BUILD_FLAGS based on VARIANT variable
+debug: all
 
-# Release build (default optimization)
-release: CXXFLAGS += -DNDEBUG
-release: $(TARGET)
+release: all
 
 # Clean build artifacts
 clean:
@@ -145,9 +189,13 @@ endif
 	@echo "Uninstalled AIEngine"
 
 # Development targets
-test: $(TARGET)
-	@echo "Building and running unit tests..."
-	$(MAKE) -C tests unit
+test: tests
+ifneq ($(TEST_SOURCES),)
+	@echo "Running unit tests..."
+	$(TEST_TARGET)
+else
+	@echo "No unit tests available to run"
+endif
 
 # Code analysis and formatting targets
 analyze: $(SOURCES)
