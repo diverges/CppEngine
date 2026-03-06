@@ -6,6 +6,7 @@
 VARIANT ?= debug
 export VARIANT
 export BIN_OUTPUT = $(CURDIR)/bin/$(VARIANT)
+export BUILD_OUTPUT = $(CURDIR)/build/$(VARIANT)
 
 # Default target
 .DEFAULT_GOAL := debug
@@ -58,15 +59,12 @@ release-testgame: testgame
 # Build engine component
 engine: | $(BIN_OUTPUT)
 	@echo "Building engine ($(VARIANT))..."
-	@$(MAKE) -C engine VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) && echo "✅ Engine build completed" || (echo "❌ Engine build failed" && exit 1)
+	@$(MAKE) -C engine VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) BUILD_OUTPUT=$(BUILD_OUTPUT) && echo "✅ Engine build completed" || (echo "❌ Engine build failed" && exit 1)
 
 # Build testgame component (depends on engine)
 testgame: engine | $(BIN_OUTPUT)
 	@echo "Building testgame ($(VARIANT))..."  
-	@$(MAKE) -C testgame VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) && echo "✅ TestGame build completed" || (echo "❌ TestGame build failed" && exit 1)
-
-#==============================================================================
-# Utility Targets
+	@$(MAKE) -C testgame VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) BUILD_OUTPUT=$(BUILD_OUTPUT) && echo "✅ TestGame build completed" || (echo "❌ TestGame build failed" && exit 1)
 #==============================================================================
 
 # Execute testgame
@@ -142,13 +140,15 @@ endif
 # Directory Creation
 #==============================================================================
 
-# Create output directory if it doesn't exist
+# Create output directories if they don't exist
 $(BIN_OUTPUT):
 	@echo "Creating output directory: $(BIN_OUTPUT)"
 ifeq ($(OS),Windows_NT)
 	@if not exist "$(subst /,\\,$(BIN_OUTPUT))" mkdir "$(subst /,\\,$(BIN_OUTPUT))" 2>nul
+	@if not exist "$(subst /,\\,$(BUILD_OUTPUT))" mkdir "$(subst /,\\,$(BUILD_OUTPUT))" 2>nul
 else
 	@mkdir -p $(BIN_OUTPUT)
+	@mkdir -p $(BUILD_OUTPUT)
 endif
 
 #==============================================================================

@@ -8,13 +8,17 @@ DEBUG_FLAGS := -g -DDEBUG -O0
 
 # Directories
 SRC_DIR := src
-# Use BIN_OUTPUT from root Makefile if available, otherwise default to local bin/
+# Use centralized output directories from root Makefile
 ifdef BIN_OUTPUT
     BIN_DIR := $(BIN_OUTPUT)
 else
     BIN_DIR := bin
 endif
-BUILD_DIR := build
+ifdef BUILD_OUTPUT
+    BUILD_DIR := $(BUILD_OUTPUT)/testgame
+else
+    BUILD_DIR := build
+endif
 ENGINE_DIR := ../engine
 
 # Build variant handling (accepts VARIANT from root Makefile)
@@ -76,7 +80,7 @@ all: $(TARGET)
 # Create directories (Windows-compatible)
 $(BUILD_DIR):
 ifeq ($(OS),Windows_NT)
-	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))" mkdir "$(subst /,\\,$(BUILD_DIR))"
 else
 	mkdir -p $(BUILD_DIR)
 endif
@@ -115,10 +119,11 @@ release: all
 # Clean build artifacts
 clean:
 ifeq ($(OS),Windows_NT)
-	@if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)" 
-	@if exist "$(BIN_DIR)" rmdir /s /q "$(BIN_DIR)"
+	@if exist "$(subst /,\\,$(BUILD_DIR))" rmdir /s /q "$(subst /,\\,$(BUILD_DIR))" 
+	@if exist "$(subst /,\\,$(BIN_DIR))\\testgame.exe" del "$(subst /,\\,$(BIN_DIR))\\testgame.exe"
 else
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf $(BUILD_DIR)
+	rm -f $(BIN_DIR)/testgame.exe
 endif
 	@echo "Cleaned test game build artifacts"
 
