@@ -15,7 +15,11 @@
     "C_Cpp.default.cStandard": "c17",
     "C_Cpp.default.compilerPath": "g++",
     "C_Cpp.default.intelliSenseMode": "gcc-x64",
-    "C_Cpp.default.compilerArgs": ["-Wall", "-Wextra", "-Wpedantic"],
+    "C_Cpp.default.compilerArgs": [
+        "-Wall",
+        "-Wextra",
+        "-Wpedantic"
+    ],
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
     "C_Cpp.inlayHints.parameterNames.enabled": true,
@@ -25,24 +29,13 @@
     "C_Cpp.dim.inactiveRegions": true,
     "files.associations": {
         "*.hpp": "cpp",
-        "*.cpp": "cpp", 
+        "*.cpp": "cpp",
         "*.h": "c",
         "*.c": "c",
         "*.inl": "cpp",
         "*.glsl": "glsl",
         "Makefile": "makefile",
         "*.mk": "makefile"
-    },
-    "files.exclude": {
-        "**/build/": true,
-        "**/bin/debug/": true,
-        "**/bin/release/": true,
-        "**/*.o": true,
-        "**/*.d": true,
-        "**/*.a": false,
-        "**/*.exe": false,
-        "**/lib/": true,
-        "**/.vscode/*.db": true
     },
     "search.exclude": {
         "**/build/": true,
@@ -51,9 +44,7 @@
         "**/*.o": true,
         "**/*.d": true
     },
-    "debug.console.fontSize": 12,
     "debug.internalConsoleOptions": "openOnSessionStart",
     "terminal.integrated.defaultProfile.windows": "PowerShell",
     "terminal.integrated.cwd": "${workspaceFolder}"
 }
-
