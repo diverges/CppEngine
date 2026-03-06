@@ -125,6 +125,17 @@ endif
 $(TARGET): $(LIB_DIR) $(OBJECTS)
 	ar rcs $(TARGET) $(OBJECTS)
 	@echo "Built engine library: $(TARGET)"
+	@echo "Copying required runtime DLLs..."
+ifeq ($(OS),Windows_NT)
+	@if exist "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" ( \
+		copy "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo "✓ Copied SDL2.dll to $(LIB_DIR)" \
+	) else echo "❌ SDL2.dll not found in deps/SDL2/lib/$(DEP_ARCH_PATH)/"
+	@if exist "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" ( \
+		copy "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo "✓ Copied glew32.dll to $(LIB_DIR)" \
+	) else echo "❌ glew32.dll not found in deps/glew/lib/$(DEP_ARCH_PATH)/"
+else
+	@echo "ℹ️  DLL copying not needed on non-Windows systems"
+endif
 
 # Build tests if test sources exist
 .PHONY: tests
@@ -311,7 +322,12 @@ info:
 	@echo "Libraries: $(LIBS)"
 	@echo "Sources: $(SOURCES)"
 	@echo "Target: $(TARGET)"
+	@echo "Build dir: $(BUILD_DIR)"
+	@echo "Output dir: $(LIB_DIR)"
+	@echo "Architecture: $(DEP_ARCH_PATH)"
 	@echo "Install prefix: $(INSTALL_PREFIX)"
+	@echo "SDL2 DLL: deps/SDL2/lib/$(DEP_ARCH_PATH)/SDL2.dll"
+	@echo "GLEW DLL: deps/glew/lib/$(DEP_ARCH_PATH)/glew32.dll"
 	@echo "=================================="
 
 # Verify build environment
@@ -328,4 +344,5 @@ endif
 	@echo "Build environment verified"
 
 .PHONY: all debug release clean install uninstall test analyze format format-check \
-        profile coverage coverage-report docs memcheck benchmark validate setup-dev info verify
+        profile coverage coverage-report docs memcheck benchmark validate setup-dev info verify \
+        tests
