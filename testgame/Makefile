@@ -142,13 +142,20 @@ rebuild: clean
 	$(MAKE) -C $(ENGINE_DIR)
 	$(MAKE)
 
-# Copy required DLLs for Windows
+# Copy required DLLs for Windows runtime
 copy-dlls: $(TARGET)
-	@echo "Copying required DLLs..."
-	@if [ -f "$(ENGINE_DIR)/deps/SDL2/lib/SDL2.dll" ]; then \
-		cp "$(ENGINE_DIR)/deps/SDL2/lib/SDL2.dll" $(BIN_DIR)/; \
-		echo "✓ Copied SDL2.dll"; \
-	fi
+	@echo "Copying required DLLs from project dependencies..."
+ifeq ($(OS),Windows_NT)
+	@if exist "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" ( \
+		copy "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo "✓ Copied SDL2.dll" \
+	) else echo "❌ SDL2.dll not found in $(ENGINE_DIR)/deps/SDL2/lib/$(DEP_ARCH_PATH)/"
+	@if exist "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" ( \
+		copy "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo "✓ Copied glew32.dll" \
+	) else echo "❌ glew32.dll not found in $(ENGINE_DIR)/deps/glew/lib/$(DEP_ARCH_PATH)/"
+	@echo "✅ DLL copying completed"
+else
+	@echo "ℹ️  DLL copying not needed on non-Windows systems"
+endif
 
 # Development workflow
 dev: build-engine $(TARGET) copy-dlls
@@ -230,27 +237,53 @@ info:
 	@echo "Engine: $(ENGINE_DIR)/lib/libAIEngine.a"
 	@echo "===================================="
 
+# DLL installation help
+help-dlls:
+	@echo "==============================================="
+	@echo "Windows DLL Setup for Team Development"
+	@echo "==============================================="
+	@echo ""
+	@echo "The game requires SDL2.dll and glew32.dll to run."
+	@echo ""
+	@echo "� Required DLL Locations:"
+	@echo "   engine/deps/SDL2/lib/windows-mingw64/SDL2.dll"
+	@echo "   engine/deps/glew/lib/windows-mingw64/glew32.dll"
+	@echo ""
+	@echo "📦 How to obtain the DLLs:"
+	@echo "   1. SDL2.dll: Download from https://github.com/libsdl-org/SDL/releases"
+	@echo "      - Get 'Development Libraries' for mingw"
+	@echo "      - Extract and copy bin/SDL2.dll to the above location"
+	@echo ""
+	@echo "   2. glew32.dll: Download from https://glew.sourceforge.net/"
+	@echo "      - Get 'Binaries' for Windows"
+	@echo "      - Extract and copy bin/Release/x64/glew32.dll to the above location"
+	@echo ""
+	@echo "🔍 VERIFY: Run 'make copy-dlls' to test DLL detection"
+	@echo "==============================================="
+
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  all       - Build test game (default)"
-	@echo "  debug     - Build with debug symbols"
-	@echo "  release   - Build optimized version"
-	@echo "  run       - Build and run test game"
-	@echo "  clean     - Remove build artifacts"
-	@echo "  rebuild   - Clean rebuild including engine"
-	@echo "  dev       - Full development build"
-	@echo "  profile   - Build with profiling support"
-	@echo "  coverage  - Build with coverage instrumentation"
-	@echo "  memcheck  - Run memory leak detection"
-	@echo "  benchmark - Run performance benchmarks"
-	@echo "  stress    - Run 5-minute stress test"
-	@echo "  test      - Run basic functionality tests"
-	@echo "  format    - Format source code"
-	@echo "  analyze   - Run static code analysis"
-	@echo "  dist      - Create distribution package"
-	@echo "  info      - Show build configuration"
-	@echo "  help      - Show this help"
+	@echo "  all         - Build test game (default)"
+	@echo "  debug       - Build with debug symbols"
+	@echo "  release     - Build optimized version"
+	@echo "  run         - Build and run test game"
+	@echo "  clean       - Remove build artifacts"
+	@echo "  rebuild     - Clean rebuild including engine"
+	@echo "  dev         - Full development build with DLLs"
+	@echo "  copy-dlls   - Copy required runtime DLLs"
+	@echo "  profile     - Build with profiling support"
+	@echo "  coverage    - Build with coverage instrumentation"
+	@echo "  memcheck    - Run memory leak detection"
+	@echo "  benchmark   - Run performance benchmarks"
+	@echo "  stress      - Run 5-minute stress test"
+	@echo "  test        - Run basic functionality tests"
+	@echo "  format      - Format source code"
+	@echo "  analyze     - Run static code analysis"
+	@echo "  dist        - Create distribution package"
+	@echo "  info        - Show build configuration"
+	@echo "  help-dlls   - Show DLL setup instructions for Windows"
+	@echo "  help        - Show this help"
 
 .PHONY: all debug release clean run build-engine rebuild copy-dlls dev info check-engine \
-        profile coverage memcheck benchmark stress format analyze test dist help
+        profile coverage memcheck benchmark stress format analyze test dist help help-dlls
