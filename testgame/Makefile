@@ -8,13 +8,17 @@ DEBUG_FLAGS := -g -DDEBUG -O0
 
 # Directories
 SRC_DIR := src
-# Use BIN_OUTPUT from root Makefile if available, otherwise default to local bin/
+# Use centralized output directories from root Makefile
 ifdef BIN_OUTPUT
     BIN_DIR := $(BIN_OUTPUT)
 else
     BIN_DIR := bin
 endif
-BUILD_DIR := build
+ifdef BUILD_OUTPUT
+    BUILD_DIR := $(BUILD_OUTPUT)/testgame
+else
+    BUILD_DIR := build
+endif
 ENGINE_DIR := ../engine
 
 # Build variant handling (accepts VARIANT from root Makefile)
@@ -76,7 +80,7 @@ all: $(TARGET)
 # Create directories (Windows-compatible)
 $(BUILD_DIR):
 ifeq ($(OS),Windows_NT)
-	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))" mkdir "$(subst /,\\,$(BUILD_DIR))"
 else
 	mkdir -p $(BUILD_DIR)
 endif
@@ -115,10 +119,11 @@ release: all
 # Clean build artifacts
 clean:
 ifeq ($(OS),Windows_NT)
-	@if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)" 
-	@if exist "$(BIN_DIR)" rmdir /s /q "$(BIN_DIR)"
+	@if exist "$(subst /,\\,$(BUILD_DIR))" rmdir /s /q "$(subst /,\\,$(BUILD_DIR))" 
+	@if exist "$(subst /,\\,$(BIN_DIR))\\testgame.exe" del "$(subst /,\\,$(BIN_DIR))\\testgame.exe"
 else
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf $(BUILD_DIR)
+	rm -f $(BIN_DIR)/testgame.exe
 endif
 	@echo "Cleaned test game build artifacts"
 
@@ -142,13 +147,20 @@ rebuild: clean
 	$(MAKE) -C $(ENGINE_DIR)
 	$(MAKE)
 
-# Copy required DLLs for Windows
+# Copy required DLLs for Windows runtime
 copy-dlls: $(TARGET)
-	@echo "Copying required DLLs..."
-	@if [ -f "$(ENGINE_DIR)/deps/SDL2/lib/SDL2.dll" ]; then \
-		cp "$(ENGINE_DIR)/deps/SDL2/lib/SDL2.dll" $(BIN_DIR)/; \
-		echo "✓ Copied SDL2.dll"; \
-	fi
+	@echo "Copying required DLLs from project dependencies..."
+ifeq ($(OS),Windows_NT)
+	@if exist "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" ( \
+		copy "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo "✓ Copied SDL2.dll" \
+	) else echo "❌ SDL2.dll not found in $(ENGINE_DIR)/deps/SDL2/lib/$(DEP_ARCH_PATH)/"
+	@if exist "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" ( \
+		copy "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo "✓ Copied glew32.dll" \
+	) else echo "❌ glew32.dll not found in $(ENGINE_DIR)/deps/glew/lib/$(DEP_ARCH_PATH)/"
+	@echo "✅ DLL copying completed"
+else
+	@echo "ℹ️  DLL copying not needed on non-Windows systems"
+endif
 
 # Development workflow
 dev: build-engine $(TARGET) copy-dlls
@@ -230,27 +242,53 @@ info:
 	@echo "Engine: $(ENGINE_DIR)/lib/libAIEngine.a"
 	@echo "===================================="
 
+# DLL installation help
+help-dlls:
+	@echo "==============================================="
+	@echo "Windows DLL Setup for Team Development"
+	@echo "==============================================="
+	@echo ""
+	@echo "The game requires SDL2.dll and glew32.dll to run."
+	@echo ""
+	@echo "� Required DLL Locations:"
+	@echo "   engine/deps/SDL2/lib/windows-mingw64/SDL2.dll"
+	@echo "   engine/deps/glew/lib/windows-mingw64/glew32.dll"
+	@echo ""
+	@echo "📦 How to obtain the DLLs:"
+	@echo "   1. SDL2.dll: Download from https://github.com/libsdl-org/SDL/releases"
+	@echo "      - Get 'Development Libraries' for mingw"
+	@echo "      - Extract and copy bin/SDL2.dll to the above location"
+	@echo ""
+	@echo "   2. glew32.dll: Download from https://glew.sourceforge.net/"
+	@echo "      - Get 'Binaries' for Windows"
+	@echo "      - Extract and copy bin/Release/x64/glew32.dll to the above location"
+	@echo ""
+	@echo "🔍 VERIFY: Run 'make copy-dlls' to test DLL detection"
+	@echo "==============================================="
+
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  all       - Build test game (default)"
-	@echo "  debug     - Build with debug symbols"
-	@echo "  release   - Build optimized version"
-	@echo "  run       - Build and run test game"
-	@echo "  clean     - Remove build artifacts"
-	@echo "  rebuild   - Clean rebuild including engine"
-	@echo "  dev       - Full development build"
-	@echo "  profile   - Build with profiling support"
-	@echo "  coverage  - Build with coverage instrumentation"
-	@echo "  memcheck  - Run memory leak detection"
-	@echo "  benchmark - Run performance benchmarks"
-	@echo "  stress    - Run 5-minute stress test"
-	@echo "  test      - Run basic functionality tests"
-	@echo "  format    - Format source code"
-	@echo "  analyze   - Run static code analysis"
-	@echo "  dist      - Create distribution package"
-	@echo "  info      - Show build configuration"
-	@echo "  help      - Show this help"
+	@echo "  all         - Build test game (default)"
+	@echo "  debug       - Build with debug symbols"
+	@echo "  release     - Build optimized version"
+	@echo "  run         - Build and run test game"
+	@echo "  clean       - Remove build artifacts"
+	@echo "  rebuild     - Clean rebuild including engine"
+	@echo "  dev         - Full development build with DLLs"
+	@echo "  copy-dlls   - Copy required runtime DLLs"
+	@echo "  profile     - Build with profiling support"
+	@echo "  coverage    - Build with coverage instrumentation"
+	@echo "  memcheck    - Run memory leak detection"
+	@echo "  benchmark   - Run performance benchmarks"
+	@echo "  stress      - Run 5-minute stress test"
+	@echo "  test        - Run basic functionality tests"
+	@echo "  format      - Format source code"
+	@echo "  analyze     - Run static code analysis"
+	@echo "  dist        - Create distribution package"
+	@echo "  info        - Show build configuration"
+	@echo "  help-dlls   - Show DLL setup instructions for Windows"
+	@echo "  help        - Show this help"
 
 .PHONY: all debug release clean run build-engine rebuild copy-dlls dev info check-engine \
-        profile coverage memcheck benchmark stress format analyze test dist help
+        profile coverage memcheck benchmark stress format analyze test dist help help-dlls

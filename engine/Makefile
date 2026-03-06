@@ -40,13 +40,17 @@ DEBUG_FLAGS := -g -DDEBUG -O0
 # Directories
 SRC_DIR := src
 INCLUDE_DIR := include
-# Use BIN_OUTPUT from root Makefile if available, otherwise default to local lib/
+# Use centralized output directories from root Makefile
 ifdef BIN_OUTPUT
     LIB_DIR := $(BIN_OUTPUT)
 else
     LIB_DIR := lib
 endif
-BUILD_DIR := build
+ifdef BUILD_OUTPUT
+    BUILD_DIR := $(BUILD_OUTPUT)/engine
+else
+    BUILD_DIR := build
+endif
 DEPS_DIR := deps
 
 # Build variant handling (accepts VARIANT from root Makefile)
@@ -97,13 +101,13 @@ CXXFLAGS += $(BUILD_FLAGS)
 # Create directories (Windows-compatible)
 $(BUILD_DIR):
 ifeq ($(OS),Windows_NT)
-	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
-	@if not exist "$(BUILD_DIR)\\core" mkdir "$(BUILD_DIR)\\core"
-	@if not exist "$(BUILD_DIR)\\graphics" mkdir "$(BUILD_DIR)\\graphics"
-	@if not exist "$(BUILD_DIR)\\scene" mkdir "$(BUILD_DIR)\\scene"
-	@if not exist "$(BUILD_DIR)\\components" mkdir "$(BUILD_DIR)\\components"
-	@if not exist "$(BUILD_DIR)\\math" mkdir "$(BUILD_DIR)\\math"
-	@if not exist "$(BUILD_DIR)\\platform" mkdir "$(BUILD_DIR)\\platform"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))" mkdir "$(subst /,\\,$(BUILD_DIR))"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))\\core" mkdir "$(subst /,\\,$(BUILD_DIR))\\core"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))\\graphics" mkdir "$(subst /,\\,$(BUILD_DIR))\\graphics"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))\\scene" mkdir "$(subst /,\\,$(BUILD_DIR))\\scene"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))\\components" mkdir "$(subst /,\\,$(BUILD_DIR))\\components"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))\\math" mkdir "$(subst /,\\,$(BUILD_DIR))\\math"
+	@if not exist "$(subst /,\\,$(BUILD_DIR))\\platform" mkdir "$(subst /,\\,$(BUILD_DIR))\\platform"
 else
 	mkdir -p $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)/core
@@ -125,6 +129,17 @@ endif
 $(TARGET): $(LIB_DIR) $(OBJECTS)
 	ar rcs $(TARGET) $(OBJECTS)
 	@echo "Built engine library: $(TARGET)"
+	@echo "Copying required runtime DLLs..."
+ifeq ($(OS),Windows_NT)
+	@if exist "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" ( \
+		copy "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo "✓ Copied SDL2.dll to $(LIB_DIR)" \
+	) else echo "❌ SDL2.dll not found in deps/SDL2/lib/$(DEP_ARCH_PATH)/"
+	@if exist "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" ( \
+		copy "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo "✓ Copied glew32.dll to $(LIB_DIR)" \
+	) else echo "❌ glew32.dll not found in deps/glew/lib/$(DEP_ARCH_PATH)/"
+else
+	@echo "ℹ️  DLL copying not needed on non-Windows systems"
+endif
 
 # Build tests if test sources exist
 .PHONY: tests
@@ -140,7 +155,7 @@ endif
 # Compile source files with dependency generation
 $(BUILD_DIR)/%.o: src/%.cpp | $(BUILD_DIR)
 ifeq ($(OS),Windows_NT)
-	@if not exist "$(dir $@)" mkdir "$(dir $@)"
+	@if not exist "$(subst /,\\,$(dir $@))" mkdir "$(subst /,\\,$(dir $@))"
 else
 	@mkdir -p $(dir $@)
 endif
@@ -158,10 +173,11 @@ release: all
 # Clean build artifacts
 clean:
 ifeq ($(OS),Windows_NT)
-	@if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)"
-	@if exist "$(LIB_DIR)" rmdir /s /q "$(LIB_DIR)"
+	@if exist "$(subst /,\\,$(BUILD_DIR))" rmdir /s /q "$(subst /,\\,$(BUILD_DIR))"
+	@if exist "$(subst /,\\,$(LIB_DIR))\\libAIEngine.a" del "$(subst /,\\,$(LIB_DIR))\\libAIEngine.a"
 else
-	rm -rf $(BUILD_DIR) $(LIB_DIR)
+	rm -rf $(BUILD_DIR)
+	rm -f $(LIB_DIR)/libAIEngine.a
 endif
 	@echo "Cleaned build artifacts"
 
@@ -310,7 +326,12 @@ info:
 	@echo "Libraries: $(LIBS)"
 	@echo "Sources: $(SOURCES)"
 	@echo "Target: $(TARGET)"
+	@echo "Build dir: $(BUILD_DIR)"
+	@echo "Output dir: $(LIB_DIR)"
+	@echo "Architecture: $(DEP_ARCH_PATH)"
 	@echo "Install prefix: $(INSTALL_PREFIX)"
+	@echo "SDL2 DLL: deps/SDL2/lib/$(DEP_ARCH_PATH)/SDL2.dll"
+	@echo "GLEW DLL: deps/glew/lib/$(DEP_ARCH_PATH)/glew32.dll"
 	@echo "=================================="
 
 # Verify build environment
@@ -327,4 +348,5 @@ endif
 	@echo "Build environment verified"
 
 .PHONY: all debug release clean install uninstall test analyze format format-check \
-        profile coverage coverage-report docs memcheck benchmark validate setup-dev info verify
+        profile coverage coverage-report docs memcheck benchmark validate setup-dev info verify \
+        tests
