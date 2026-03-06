@@ -61,6 +61,10 @@ endif
 
 # Source files (explicitly listed for Windows compatibility)
 SOURCES := src/core/Engine.cpp \
+           src/core/EngineSystemDescriptor.cpp \
+           src/core/EngineSystemManager.cpp \
+           src/core/IEngineSubsystem.cpp \
+           src/core/ISubsystemProvider.cpp \
            src/scene/SceneNode.cpp \
            src/scene/SceneGraph.cpp \
            src/math/Transform.cpp \
