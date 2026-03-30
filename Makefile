@@ -22,14 +22,16 @@ export BUILD_OUTPUT = $(CURDIR)/build/$(VARIANT)
 # Build debug variant (default)
 debug: VARIANT = debug
 debug: 
-	@echo "--- AIEngine Debug Build Started"
-	@$(MAKE) all VARIANT=$(VARIANT) && echo "" && echo "🎉 DEBUG BUILD COMPLETE ✅" && echo "   Engine:   $(BIN_OUTPUT)/libAIEngine.a" && echo "   TestGame: $(BIN_OUTPUT)/testgame.exe" && echo "   Run with: make run" && echo "" || (echo "" && echo "💥 DEBUG BUILD FAILED ❌" && echo "" && exit 1)
+	@echo --- AIEngine Debug Build Started
+	@echo   Setting up debug configuration...
+	@$(MAKE) all VARIANT=$(VARIANT) && echo && echo [SUCCESS] DEBUG BUILD COMPLETE && echo   Engine:   $(BIN_OUTPUT)/libAIEngine.a && echo   TestGame: $(BIN_OUTPUT)/testgame.exe && echo   Run with: make run && echo || (echo && echo [ERROR] DEBUG BUILD FAILED && echo && exit 1)
 
 # Build release variant  
 release: VARIANT = release  
 release: 
-	@echo "--- AIEngine Release Build Started"
-	@$(MAKE) all VARIANT=$(VARIANT) && echo "" && echo "🚀 RELEASE BUILD COMPLETE ✅" && echo "   Engine:   $(BIN_OUTPUT)/libAIEngine.a" && echo "   TestGame: $(BIN_OUTPUT)/testgame.exe" && echo "   Run with: VARIANT=release make run" && echo "" || (echo "" && echo "💥 RELEASE BUILD FAILED ❌" && echo "" && exit 1)
+	@echo --- AIEngine Release Build Started
+	@echo   Setting up release configuration...
+	@$(MAKE) all VARIANT=$(VARIANT) && echo && echo [SUCCESS] RELEASE BUILD COMPLETE && echo   Engine:   $(BIN_OUTPUT)/libAIEngine.a && echo   TestGame: $(BIN_OUTPUT)/testgame.exe && echo   Run with: VARIANT=release make run && echo || (echo && echo [ERROR] RELEASE BUILD FAILED && echo && exit 1)
 
 # Build all components
 all: engine testgame
@@ -58,34 +60,37 @@ release-testgame: testgame
 
 # Build engine component
 engine: | $(BIN_OUTPUT)
-	@echo "Building engine ($(VARIANT))..."
-	@$(MAKE) -C engine VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) BUILD_OUTPUT=$(BUILD_OUTPUT) && echo "✅ Engine build completed" || (echo "❌ Engine build failed" && exit 1)
+	@echo Building engine ($(VARIANT))...
+	@echo   Preparing engine build...
+	@$(MAKE) -C engine VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) BUILD_OUTPUT=$(BUILD_OUTPUT) && echo   [SUCCESS] Engine build completed || (echo   [ERROR] Engine build failed && exit 1)
 
 # Build testgame component (depends on engine)
 testgame: engine | $(BIN_OUTPUT)
-	@echo "Building testgame ($(VARIANT))..."  
-	@$(MAKE) -C testgame VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) BUILD_OUTPUT=$(BUILD_OUTPUT) && echo "✅ TestGame build completed" || (echo "❌ TestGame build failed" && exit 1)
+	@echo Building testgame ($(VARIANT))...  
+	@echo   Preparing testgame build...
+	@$(MAKE) -C testgame VARIANT=$(VARIANT) BIN_OUTPUT=$(BIN_OUTPUT) BUILD_OUTPUT=$(BUILD_OUTPUT) && echo   [SUCCESS] TestGame build completed || (echo   [ERROR] TestGame build failed && exit 1)
 #==============================================================================
 
 # Execute testgame
 run: testgame
-	@echo "Running testgame..."
+	@echo Running testgame...
+	@echo   Executing $(BIN_OUTPUT)/testgame.exe
 	$(BIN_OUTPUT)/testgame.exe
 
 # Show build information
 info:
-	@echo "AIEngine Build System"
-	@echo "Variant: $(VARIANT)"  
-	@echo "Output:  $(BIN_OUTPUT)"
-	@echo "Components: engine, testgame"
+	@echo AIEngine Build System
+	@echo   Variant: $(VARIANT)  
+	@echo   Output:  $(BIN_OUTPUT)
+	@echo   Components: engine, testgame
 
 # Validate environment setup  
 check-env:
-	@echo "Checking build environment..."
-	@g++ --version >nul 2>&1 && echo "✓ g++ found and working" || echo "❌ WARNING: g++ not found or not working"
-	@make --version >nul 2>&1 && echo "✓ make found and working" || echo "❌ WARNING: make not found or not working"
-	@git --version >nul 2>&1 && echo "✓ git found and working" || echo "❌ WARNING: git not found or not working"
-	@echo "Environment check complete"
+	@echo Checking build environment...
+	@g++ --version >nul 2>&1 && echo   [OK] g++ found and working || echo   [WARNING] g++ not found or not working
+	@make --version >nul 2>&1 && echo   [OK] make found and working || echo   [WARNING] make not found or not working
+	@git --version >nul 2>&1 && echo   [OK] git found and working || echo   [WARNING] git not found or not working
+	@echo Environment check complete
 
 #==============================================================================
 # Test Targets
@@ -93,17 +98,20 @@ check-env:
 
 # Run engine unit tests only
 test-unit: engine
-	@echo "Running engine unit tests..."
+	@echo Running engine unit tests...
+	@echo   Checking for test executable...
 	@if [ -f $(BIN_OUTPUT)/engine_tests.exe ]; then \
+		echo   Executing unit tests...; \
 		$(BIN_OUTPUT)/engine_tests.exe; \
 	else \
-		echo "Unit tests not built - run 'make engine' first"; \
+		echo   [WARNING] Unit tests not built - run 'make engine' first; \
 	fi
 
 # Run integration tests (testgame execution)  
 test-integration: testgame
-	@echo "Running integration tests..."
-	$(BIN_OUTPUT)/testgame.exe --test || echo "Integration test execution"
+	@echo Running integration tests...
+	@echo   Executing testgame integration tests...
+	$(BIN_OUTPUT)/testgame.exe --test || echo   Integration test execution completed
 
 # Run all tests (unit + integration)
 test: test-unit test-integration
@@ -114,13 +122,15 @@ test: test-unit test-integration
 
 # Remove all build artifacts
 clean: clean-debug clean-release
-	@echo "Cleaning component build directories..."
+	@echo Cleaning component build directories...
+	@echo   Cleaning engine build artifacts...
 	$(MAKE) -C engine clean || true
+	@echo   Cleaning testgame build artifacts...
 	$(MAKE) -C testgame clean || true
 
 # Remove only debug artifacts
 clean-debug:  
-	@echo "Cleaning debug artifacts..."
+	@echo Cleaning debug artifacts...
 ifeq ($(OS),Windows_NT)
 	@if exist "bin\\debug" rmdir /s /q "bin\\debug" 2>nul || true
 else
@@ -129,7 +139,7 @@ endif
 
 # Remove only release artifacts
 clean-release:
-	@echo "Cleaning release artifacts..."
+	@echo Cleaning release artifacts...
 ifeq ($(OS),Windows_NT)
 	@if exist "bin\\release" rmdir /s /q "bin\\release" 2>nul || true
 else
@@ -142,7 +152,8 @@ endif
 
 # Create output directories if they don't exist
 $(BIN_OUTPUT):
-	@echo "Creating output directory: $(BIN_OUTPUT)"
+	@echo Creating output directory: $(BIN_OUTPUT)
+	@echo   Setting up build directories...
 ifeq ($(OS),Windows_NT)
 	@if not exist "$(subst /,\\,$(BIN_OUTPUT))" mkdir "$(subst /,\\,$(BIN_OUTPUT))" 2>nul
 	@if not exist "$(subst /,\\,$(BUILD_OUTPUT))" mkdir "$(subst /,\\,$(BUILD_OUTPUT))" 2>nul
@@ -157,57 +168,57 @@ endif
 
 # Show available targets
 help:
-	@echo "AIEngine Build System - Available Targets:"
-	@echo ""  
-	@echo "Build Targets:"
-	@echo "  debug      Build debug variant (default)"
-	@echo "  release    Build release variant"
-	@echo "  all        Build all components"
-	@echo "  engine     Build engine component only"
-	@echo "  testgame   Build testgame component only"
-	@echo ""
-	@echo "Variant + Component Targets:"
-	@echo "  debug-engine     Build engine in debug mode"
-	@echo "  release-engine   Build engine in release mode"
-	@echo "  debug-testgame   Build testgame in debug mode"
-	@echo "  release-testgame Build testgame in release mode"
-	@echo ""
-	@echo "Test Targets:"  
-	@echo "  test       Run all tests (unit + integration)"
-	@echo "  test-unit  Run engine unit tests only"
-	@echo "  test-integration  Run integration tests"
-	@echo ""
-	@echo "Utility Targets:"
-	@echo "  run        Execute testgame"
-	@echo "  clean      Remove all build artifacts"  
-	@echo "  check-env  Validate build environment"
-	@echo "  info       Show build configuration"
-	@echo "  help       Show this help"
-	@echo ""
-	@echo "Component-Specific Targets:"
-	@echo "  Engine (cd engine && make <target>):"
-	@echo "    analyze       Run static analysis (cppcheck)"  
-	@echo "    format        Format code with clang-format"
-	@echo "    format-check  Verify code formatting"
-	@echo "    profile       Build with profiling support"
-	@echo "    coverage      Build with coverage instrumentation"
-	@echo "    coverage-report Generate coverage HTML report"
-	@echo "    docs          Generate API documentation"
-	@echo "    install       Install headers and library"
-	@echo ""
-	@echo "  TestGame (cd testgame && make <target>):"
-	@echo "    rebuild       Clean rebuild including engine"
-	@echo "    dev           Full development build with DLLs"
-	@echo "    copy-dlls     Copy required Windows DLLs"
-	@echo "    profile       Build with profiling support"
-	@echo "    coverage      Build with coverage instrumentation" 
-	@echo "    memcheck      Run memory leak detection"
-	@echo "    benchmark     Run performance benchmarks"
-	@echo "    stress        Run 5-minute stress test"
-	@echo "    dist          Create distribution package"
-	@echo "    analyze       Run static analysis"
-	@echo "    format        Format test game code"
-	@echo ""
-	@echo "Example Component Usage:"
-	@echo "  cd engine && make format     # Format engine code"
-	@echo "  cd testgame && make memcheck # Run memory leak detection"
+	@echo AIEngine Build System - Available Targets:
+	@echo  
+	@echo Build Targets:
+	@echo   debug      Build debug variant (default)
+	@echo   release    Build release variant
+	@echo   all        Build all components
+	@echo   engine     Build engine component only
+	@echo   testgame   Build testgame component only
+	@echo 
+	@echo Variant + Component Targets:
+	@echo   debug-engine     Build engine in debug mode
+	@echo   release-engine   Build engine in release mode
+	@echo   debug-testgame   Build testgame in debug mode
+	@echo   release-testgame Build testgame in release mode
+	@echo 
+	@echo Test Targets:  
+	@echo   test       Run all tests (unit + integration)
+	@echo   test-unit  Run engine unit tests only
+	@echo   test-integration  Run integration tests
+	@echo 
+	@echo Utility Targets:
+	@echo   run        Execute testgame
+	@echo   clean      Remove all build artifacts  
+	@echo   check-env  Validate build environment
+	@echo   info       Show build configuration
+	@echo   help       Show this help
+	@echo 
+	@echo Component-Specific Targets:
+	@echo   Engine (cd engine && make <target>):
+	@echo     analyze       Run static analysis (cppcheck)  
+	@echo     format        Format code with clang-format
+	@echo     format-check  Verify code formatting
+	@echo     profile       Build with profiling support
+	@echo     coverage      Build with coverage instrumentation
+	@echo     coverage-report Generate coverage HTML report
+	@echo     docs          Generate API documentation
+	@echo     install       Install headers and library
+	@echo 
+	@echo   TestGame (cd testgame && make <target>):
+	@echo     rebuild       Clean rebuild including engine
+	@echo     dev           Full development build with DLLs
+	@echo     copy-dlls     Copy required Windows DLLs
+	@echo     profile       Build with profiling support
+	@echo     coverage      Build with coverage instrumentation 
+	@echo     memcheck      Run memory leak detection
+	@echo     benchmark     Run performance benchmarks
+	@echo     stress        Run 5-minute stress test
+	@echo     dist          Create distribution package
+	@echo     analyze       Run static analysis
+	@echo     format        Format test game code
+	@echo 
+	@echo Example Component Usage:
+	@echo   cd engine && make format     # Format engine code
+	@echo   cd testgame && make memcheck # Run memory leak detection

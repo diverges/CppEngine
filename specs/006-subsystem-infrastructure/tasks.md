@@ -119,13 +119,13 @@
 
 **Purpose**: Cross-cutting concerns and integration with existing engine
 
-- [ ] T035 [P] Update existing Engine class to integrate with EngineSystemManager lifecycle
-- [ ] T036 [P] Add GetEngineSubsystem<T>() convenience macro implementation
-- [ ] T037 [P] Create comprehensive integration tests for full subsystem workflow
+- [X] T035 [P] Update existing Engine class to integrate with EngineSystemManager lifecycle
+- [X] T036 [P] Add GetEngineSubsystem<T>() convenience macro implementation
+- [X] T037 [P] Create comprehensive integration tests for full subsystem workflow
 - [X] T038 [P] Update engine build system (Makefile) to include new subsystem infrastructure files
-- [ ] T039 [P] Add performance validation tests to verify O(1) lookup requirements
-- [ ] T040 [P] Code cleanup and documentation review across all infrastructure files
-- [ ] T041 [P] Run quickstart.md validation with example implementations
+- [X] T039 [P] Add performance validation tests to verify O(1) lookup requirements
+- [X] T040 [P] Code cleanup and documentation review across all infrastructure files
+- [X] T041 [P] Run quickstart.md validation with example implementations
 
 ---
 

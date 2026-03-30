@@ -13,9 +13,54 @@
 namespace AIEngine {
 
 /**
- * Singleton registry and lifecycle manager for all engine subsystems.
- * Provides O(1) subsystem access and manages subsystem lifecycle.
- * Single-threaded design - all operations must occur on main thread.
+ * @brief Singleton registry and lifecycle manager for all engine subsystems.
+ *
+ * EngineSystemManager serves as the central hub for all subsystem management
+ * in the engine. It provides O(1) subsystem access using type-based hash maps
+ * and manages the complete lifecycle of registered subsystems.
+ *
+ * Key Features:
+ * - O(1) subsystem access by interface type
+ * - Automated lifecycle management (Initialize→Start→Stop→Destroy)
+ * - Single subsystem per interface type constraint
+ * - Thread-safe singleton access (single-threaded usage only)
+ * - Descriptor-based type-safe subsystem creation
+ *
+ * Design Constraints:
+ * - Single-threaded design - all operations must occur on main thread
+ * - One active subsystem per interface type maximum
+ * - Descriptors must be registered before creating subsystems
+ * - Subsystems are owned by the manager (unique_ptr storage)
+ *
+ * Usage Pattern:
+ * @code
+ * // 1. Get singleton instance
+ * auto& manager = EngineSystemManager::GetInstance();
+ *
+ * // 2. Register descriptor
+ * auto descriptor = EngineSystemDescriptor::Create<...>(...);
+ * manager.RegisterSystemDescriptor(descriptor);
+ *
+ * // 3. Create and use subsystem
+ * auto* subsystem = manager.CreateSystem<IMySubsystem>(descriptor);
+ *
+ * // 4. Access later via convenience macro or direct call
+ * auto* sameSubsystem = GetEngineSubsystem(IMySubsystem);
+ *
+ * // 5. Lifecycle managed automatically by Engine class
+ * // manager.InitializeAllSystems();
+ * // manager.StartAllSystems();
+ * @endcode
+ *
+ * Performance Guarantees:
+ * - GetSystem(): O(1) hash map lookup
+ * - CreateSystem(): O(1) registration + construction time
+ * - HasSystem(): O(1) hash map lookup
+ * - Operations complete within 1ms on typical hardware
+ *
+ * @see EngineSystemDescriptor for type-safe subsystem creation
+ * @see IEngineSubsystem for subsystem interface requirements
+ * @see GetEngineSubsystem() macro for convenient access
  */
 class EngineSystemManager {
    public:

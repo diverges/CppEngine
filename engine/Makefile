@@ -127,18 +127,20 @@ endif
 
 # Build static library
 $(TARGET): $(LIB_DIR) $(OBJECTS)
+	@echo Building AIEngine library...
+	@echo   Creating static library...
 	ar rcs $(TARGET) $(OBJECTS)
-	@echo "Built engine library: $(TARGET)"
-	@echo "Copying required runtime DLLs..."
+	@echo   [SUCCESS] Built engine library: $(TARGET)
+	@echo   Copying required runtime DLLs...
 ifeq ($(OS),Windows_NT)
 	@if exist "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" ( \
-		copy "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo "✓ Copied SDL2.dll to $(LIB_DIR)" \
-	) else echo "❌ SDL2.dll not found in deps/SDL2/lib/$(DEP_ARCH_PATH)/"
+		copy "deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo [OK] Copied SDL2.dll to $(LIB_DIR) \
+	) else echo [ERROR] SDL2.dll not found in deps/SDL2/lib/$(DEP_ARCH_PATH)/
 	@if exist "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" ( \
-		copy "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo "✓ Copied glew32.dll to $(LIB_DIR)" \
-	) else echo "❌ glew32.dll not found in deps/glew/lib/$(DEP_ARCH_PATH)/"
+		copy "deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(subst /,\\,$(LIB_DIR))\\" >nul 2>&1 && echo [OK] Copied glew32.dll to $(LIB_DIR) \
+	) else echo [ERROR] glew32.dll not found in deps/glew/lib/$(DEP_ARCH_PATH)/
 else
-	@echo "ℹ️  DLL copying not needed on non-Windows systems"
+	@echo [INFO] DLL copying not needed on non-Windows systems
 endif
 
 # Build tests if test sources exist
@@ -159,6 +161,7 @@ ifeq ($(OS),Windows_NT)
 else
 	@mkdir -p $(dir $@)
 endif
+	@echo   Compiling $(notdir $<)...
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -MMD -MP -c $< -o $@
 
 # Include dependencies
@@ -298,7 +301,7 @@ benchmark: release
 
 # Full validation suite
 validate: format-check analyze test coverage-report
-	@echo "✅ Full validation complete"
+	@echo [SUCCESS] Full validation complete
 
 # Development environment setup
 setup-dev:

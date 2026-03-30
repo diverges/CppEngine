@@ -99,15 +99,18 @@ ifeq ($(OS),Windows_NT)
 else
 	@test -f $(ENGINE_LIB_PATH) || (echo "ERROR: Engine library not found at $(ENGINE_LIB_PATH). Build engine first."; exit 1)
 endif
-	@echo "+ Engine library found at $(ENGINE_LIB_PATH)"
+	@echo   [OK] Engine library found at $(ENGINE_LIB_PATH)
 
 # Build executable
 $(TARGET): check-engine $(BIN_DIR) $(OBJECTS)
+	@echo Building test game executable...
+	@echo   Linking object files...
 	$(CXX) $(OBJECTS) $(LIBRARY_DIRS) $(LIBS) -o $(TARGET)
-	@echo "Built test game: $(TARGET)"
+	@echo   [SUCCESS] Built test game: $(TARGET)
 
 # Compile source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
+	@echo   Compiling $(notdir $<)...
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 
 # Build variant targets (called from root Makefile)
@@ -152,19 +155,19 @@ copy-dlls: $(TARGET)
 	@echo "Copying required DLLs from project dependencies..."
 ifeq ($(OS),Windows_NT)
 	@if exist "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" ( \
-		copy "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo "✓ Copied SDL2.dll" \
-	) else echo "❌ SDL2.dll not found in $(ENGINE_DIR)/deps/SDL2/lib/$(DEP_ARCH_PATH)/"
+		copy "$(ENGINE_DIR)\\deps\\SDL2\\lib\\$(DEP_ARCH_PATH)\\SDL2.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo [OK] Copied SDL2.dll \
+	) else echo [ERROR] SDL2.dll not found in $(ENGINE_DIR)/deps/SDL2/lib/$(DEP_ARCH_PATH)/
 	@if exist "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" ( \
-		copy "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo "✓ Copied glew32.dll" \
-	) else echo "❌ glew32.dll not found in $(ENGINE_DIR)/deps/glew/lib/$(DEP_ARCH_PATH)/"
-	@echo "✅ DLL copying completed"
+		copy "$(ENGINE_DIR)\\deps\\glew\\lib\\$(DEP_ARCH_PATH)\\glew32.dll" "$(BIN_DIR)\\" >nul 2>&1 && echo [OK] Copied glew32.dll \
+	) else echo [ERROR] glew32.dll not found in $(ENGINE_DIR)/deps/glew/lib/$(DEP_ARCH_PATH)/
+	@echo [SUCCESS] DLL copying completed
 else
-	@echo "ℹ️  DLL copying not needed on non-Windows systems"
+	@echo [INFO] DLL copying not needed on non-Windows systems
 endif
 
 # Development workflow
 dev: build-engine $(TARGET) copy-dlls
-	@echo "✓ Development build complete"
+	@echo [SUCCESS] Development build complete
 
 # Profiling build
 profile: CXXFLAGS += -pg -O2 -DNDEBUG
@@ -219,7 +222,7 @@ analyze:
 test: build-engine debug
 	@echo "Running test game executable tests..."
 	timeout 10 bin/testgame.exe || echo "10-second automated test completed"
-	@echo "✅ Basic functionality verified"
+	@echo [SUCCESS] Basic functionality verified
 
 # Distribution build (optimized + dependencies)
 dist: release copy-dlls
@@ -228,7 +231,7 @@ dist: release copy-dlls
 	cp bin/testgame.exe dist/
 	cp bin/*.dll dist/ 2>/dev/null || echo "No DLLs to copy"
 	cp ../README.md dist/
-	@echo "✅ Distribution ready in dist/"
+	@echo [SUCCESS] Distribution ready in dist/
 
 # Print configuration
 info:
@@ -250,11 +253,11 @@ help-dlls:
 	@echo ""
 	@echo "The game requires SDL2.dll and glew32.dll to run."
 	@echo ""
-	@echo "� Required DLL Locations:"
+	@echo Required DLL Locations:
 	@echo "   engine/deps/SDL2/lib/windows-mingw64/SDL2.dll"
 	@echo "   engine/deps/glew/lib/windows-mingw64/glew32.dll"
 	@echo ""
-	@echo "📦 How to obtain the DLLs:"
+	@echo How to obtain the DLLs:
 	@echo "   1. SDL2.dll: Download from https://github.com/libsdl-org/SDL/releases"
 	@echo "      - Get 'Development Libraries' for mingw"
 	@echo "      - Extract and copy bin/SDL2.dll to the above location"
@@ -263,7 +266,7 @@ help-dlls:
 	@echo "      - Get 'Binaries' for Windows"
 	@echo "      - Extract and copy bin/Release/x64/glew32.dll to the above location"
 	@echo ""
-	@echo "🔍 VERIFY: Run 'make copy-dlls' to test DLL detection"
+	@echo VERIFY: Run 'make copy-dlls' to test DLL detection
 	@echo "==============================================="
 
 # Help target
