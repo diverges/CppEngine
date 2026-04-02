@@ -9,63 +9,60 @@
  */
 
 #include "../../include/AIEngine/graphics/Renderer.hpp"
+#include "../../include/AIEngine/components/RenderComponent.hpp"
+#include "../../include/AIEngine/components/TransformComponent.hpp"
 #include "../../include/AIEngine/graphics/Shader.hpp"
 #include "../../include/AIEngine/platform/Window.hpp"
 #include "../../include/AIEngine/scene/SceneNode.hpp"
-#include "../../include/AIEngine/components/RenderComponent.hpp"
-#include "../../include/AIEngine/components/TransformComponent.hpp"
-#include <iostream>
-#include <chrono>
 #include <GL/glew.h>
 #include <SDL2/SDL_opengl.h>
+#include <chrono>
+#include <iostream>
 
-namespace AIEngine
-{
+namespace AIEngine {
 
-    Renderer::Renderer(Window *window)
-        : m_window(window), m_initialized(false), m_viewMatrix(glm::mat4(1.0f)), m_projectionMatrix(glm::mat4(1.0f)), m_fps(0.0f), m_frameCount(0), m_triangleCount(0), m_lastFrameTime(0.0), m_defaultShader(nullptr)
-    {
-        // Constructor - actual initialization happens in Initialize()
+Renderer::Renderer(Window *window)
+    : m_window(window), m_initialized(false), m_viewMatrix(glm::mat4(1.0f)),
+      m_projectionMatrix(glm::mat4(1.0f)), m_fps(0.0f), m_frameCount(0),
+      m_triangleCount(0), m_lastFrameTime(0.0), m_defaultShader(nullptr) {
+  // Constructor - actual initialization happens in Initialize()
+}
+
+Renderer::~Renderer() {
+  // Cleanup OpenGL resources
+  if (m_initialized) {
+    std::cout << "Renderer: Cleaning up OpenGL resources\n";
+
+    // Cleanup cube geometry
+    if (m_cubeVAO != 0) {
+      glDeleteVertexArrays(1, &m_cubeVAO);
     }
-
-    Renderer::~Renderer()
-    {
-        // Cleanup OpenGL resources
-        if (m_initialized)
-        {
-            std::cout << "Renderer: Cleaning up OpenGL resources\n";
-            
-            // Cleanup cube geometry
-            if (m_cubeVAO != 0) {
-                glDeleteVertexArrays(1, &m_cubeVAO);
-            }
-            if (m_cubeVBO != 0) {
-                glDeleteBuffers(1, &m_cubeVBO);
-            }
-            if (m_cubeEBO != 0) {
-                glDeleteBuffers(1, &m_cubeEBO);
-            }
-        }
+    if (m_cubeVBO != 0) {
+      glDeleteBuffers(1, &m_cubeVBO);
     }
+    if (m_cubeEBO != 0) {
+      glDeleteBuffers(1, &m_cubeEBO);
+    }
+  }
+}
 
-    bool Renderer::Initialize()
-    {
-        std::cout << "Renderer: Initializing OpenGL renderer...\n";
+bool Renderer::Initialize() {
+  std::cout << "Renderer: Initializing OpenGL renderer...\n";
 
-        // Initialize GLEW for OpenGL function loading
-        if (glewInit() != GLEW_OK) {
-            std::cerr << "Renderer: Failed to initialize GLEW\n";
-            return false;
-        }
-        
-        std::cout << "Renderer: GLEW initialized successfully\n";
-        std::cout << "Renderer: OpenGL Version: " << glGetString(GL_VERSION) << "\n";
+  // Initialize GLEW for OpenGL function loading
+  if (glewInit() != GLEW_OK) {
+    std::cerr << "Renderer: Failed to initialize GLEW\n";
+    return false;
+  }
 
-        // Setup OpenGL state
-        SetupOpenGLState();
+  std::cout << "Renderer: GLEW initialized successfully\n";
+  std::cout << "Renderer: OpenGL Version: " << glGetString(GL_VERSION) << "\n";
 
-        // Create default shader with embedded source for now
-        std::string vertexSource = R"(
+  // Setup OpenGL state
+  SetupOpenGLState();
+
+  // Create default shader with embedded source for now
+  std::string vertexSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aNormal;
@@ -91,7 +88,7 @@ void main() {
 }
 )";
 
-        std::string fragmentSource = R"(
+  std::string fragmentSource = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -127,268 +124,251 @@ void main() {
 }
 )";
 
-        m_defaultShader = std::make_unique<Shader>(vertexSource, fragmentSource, true);
-        if (!m_defaultShader->IsValid())
-        {
-            std::cerr << "Renderer: Failed to create default shader\n";
-            return false;
-        }
+  m_defaultShader =
+      std::make_unique<Shader>(vertexSource, fragmentSource, true);
+  if (!m_defaultShader->IsValid()) {
+    std::cerr << "Renderer: Failed to create default shader\n";
+    return false;
+  }
 
-        // Setup default projection matrix (perspective)
-        if (m_window)
-        {
-            float aspectRatio = m_window->GetAspectRatio();
-            m_projectionMatrix = glm::perspective(
-                glm::radians(45.0f), // 45 degree FOV
-                aspectRatio,         // Aspect ratio from window
-                0.1f,                // Near plane
-                100.0f               // Far plane
-            );
-            std::cout << "Renderer: Perspective projection set (FOV=45°, aspect=" << aspectRatio << ")\n";
-        }
-
-        // Setup default view matrix (camera at origin looking down -Z)
-        m_viewMatrix = glm::lookAt(
-            glm::vec3(0.0f, 0.0f, 3.0f), // Camera position
-            glm::vec3(0.0f, 0.0f, 0.0f), // Look at origin
-            glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+  // Setup default projection matrix (perspective)
+  if (m_window) {
+    float aspectRatio = m_window->GetAspectRatio();
+    m_projectionMatrix =
+        glm::perspective(glm::radians(45.0f), // 45 degree FOV
+                         aspectRatio,         // Aspect ratio from window
+                         0.1f,                // Near plane
+                         100.0f               // Far plane
         );
+    std::cout << "Renderer: Perspective projection set (FOV=45°, aspect="
+              << aspectRatio << ")\n";
+  }
 
-        auto now = std::chrono::high_resolution_clock::now();
-        m_lastFrameTime = std::chrono::duration<double>(now.time_since_epoch()).count();
+  // Setup default view matrix (camera at origin looking down -Z)
+  m_viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), // Camera position
+                             glm::vec3(0.0f, 0.0f, 0.0f), // Look at origin
+                             glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
+  );
 
-        m_initialized = true;
-        std::cout << "Renderer: OpenGL renderer initialized successfully\n";
-        return true;
+  auto now = std::chrono::high_resolution_clock::now();
+  m_lastFrameTime =
+      std::chrono::duration<double>(now.time_since_epoch()).count();
+
+  m_initialized = true;
+  std::cout << "Renderer: OpenGL renderer initialized successfully\n";
+  return true;
+}
+
+void Renderer::BeginFrame() {
+  if (!m_initialized) {
+    return;
+  }
+
+  // Reset frame statistics
+  m_triangleCount = 0;
+  m_frameCount++;
+
+  // Clear color and depth buffers
+  glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Dark blue-gray background
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  // Use default shader for rendering
+  if (m_defaultShader && m_defaultShader->IsValid()) {
+    m_defaultShader->Use();
+
+    // Set transformation matrices
+    m_defaultShader->SetMat4("uView", m_viewMatrix);
+    m_defaultShader->SetMat4("uProjection", m_projectionMatrix);
+
+    // Set lighting uniforms
+    m_defaultShader->SetVec3("uLightPos", glm::vec3(2.0f, 2.0f, 2.0f));
+    m_defaultShader->SetVec3("uLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    m_defaultShader->SetVec3("uViewPos", glm::vec3(0.0f, 0.0f, 3.0f));
+  }
+
+  // Update frame timing for FPS calculation
+  UpdateFrameStats();
+}
+
+void Renderer::RenderScene(const SceneGraph *sceneGraph) {
+  if (!m_initialized || !sceneGraph) {
+    return;
+  }
+
+  // Render starting from root node
+  const SceneNode *rootNode = sceneGraph->GetRootNode();
+  if (rootNode) {
+    RenderNode(rootNode, glm::mat4(1.0f));
+  }
+}
+
+void Renderer::RenderNode(const SceneNode *node,
+                          const glm::mat4 &parentTransform) {
+  if (!node) {
+    return;
+  }
+
+  // Calculate world transform for this node
+  glm::mat4 worldTransform = parentTransform;
+
+  // Apply node's local transform if it has a TransformComponent
+  const auto *transformComp = node->GetComponent<TransformComponent>();
+  if (transformComp) {
+    worldTransform = parentTransform * transformComp->GetWorldMatrix();
+  }
+
+  // Render this node if it has a RenderComponent
+  const auto *renderComp = node->GetComponent<RenderComponent>();
+  if (renderComp && renderComp->IsVisible()) {
+    // Set model matrix in shader
+    if (m_defaultShader && m_defaultShader->IsValid()) {
+      m_defaultShader->SetMat4("uModel", worldTransform);
     }
 
-    void Renderer::BeginFrame()
-    {
-        if (!m_initialized)
-        {
-            return;
-        }
+    // Draw actual cube geometry (for now, simulate with cube vertices)
+    DrawCube();
+    m_triangleCount += 12; // Cube has 12 triangles
 
-        // Reset frame statistics
-        m_triangleCount = 0;
-        m_frameCount++;
-
-        // Clear color and depth buffers
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Dark blue-gray background
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Use default shader for rendering
-        if (m_defaultShader && m_defaultShader->IsValid())
-        {
-            m_defaultShader->Use();
-
-            // Set transformation matrices
-            m_defaultShader->SetMat4("uView", m_viewMatrix);
-            m_defaultShader->SetMat4("uProjection", m_projectionMatrix);
-
-            // Set lighting uniforms
-            m_defaultShader->SetVec3("uLightPos", glm::vec3(2.0f, 2.0f, 2.0f));
-            m_defaultShader->SetVec3("uLightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-            m_defaultShader->SetVec3("uViewPos", glm::vec3(0.0f, 0.0f, 3.0f));
-        }
-
-        // Update frame timing for FPS calculation
-        UpdateFrameStats();
+    // Debug output (limited)
+    static int renderCount = 0;
+    if (renderCount++ < 5) { // Only show first few renders
+      std::cout << "Renderer: Drawing node '" << node->GetName()
+                << "' with mesh ID " << renderComp->GetMeshId()
+                << " at transform [" << worldTransform[3][0] << ","
+                << worldTransform[3][1] << "," << worldTransform[3][2] << "]\n";
     }
+  }
 
-    void Renderer::RenderScene(const SceneGraph *sceneGraph)
-    {
-        if (!m_initialized || !sceneGraph)
-        {
-            return;
-        }
+  // Recursively render child nodes
+  for (const auto *child : node->GetChildren()) {
+    RenderNode(child, worldTransform);
+  }
+}
 
-        // Render starting from root node
-        const SceneNode *rootNode = sceneGraph->GetRootNode();
-        if (rootNode)
-        {
-            RenderNode(rootNode, glm::mat4(1.0f));
-        }
-    }
+void Renderer::EndFrame() {
+  if (!m_initialized) {
+    return;
+  }
 
-    void Renderer::RenderNode(const SceneNode *node, const glm::mat4 &parentTransform)
-    {
-        if (!node)
-        {
-            return;
-        }
+  // TODO: Swap buffers
+  // SDL_GL_SwapWindow(window);
+}
 
-        // Calculate world transform for this node
-        glm::mat4 worldTransform = parentTransform;
+void Renderer::SetViewMatrix(const glm::mat4 &view) { m_viewMatrix = view; }
 
-        // Apply node's local transform if it has a TransformComponent
-        const auto *transformComp = node->GetComponent<TransformComponent>();
-        if (transformComp)
-        {
-            worldTransform = parentTransform * transformComp->GetWorldMatrix();
-        }
+void Renderer::SetProjectionMatrix(const glm::mat4 &projection) {
+  m_projectionMatrix = projection;
+}
 
-        // Render this node if it has a RenderComponent
-        const auto *renderComp = node->GetComponent<RenderComponent>();
-        if (renderComp && renderComp->IsVisible())
-        {
-            // Set model matrix in shader
-            if (m_defaultShader && m_defaultShader->IsValid())
-            {
-                m_defaultShader->SetMat4("uModel", worldTransform);
-            }
+void Renderer::SetupOpenGLState() {
+  // Enable depth testing
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
 
-            // Draw actual cube geometry (for now, simulate with cube vertices)
-            DrawCube();
-            m_triangleCount += 12; // Cube has 12 triangles
+  // Set viewport
+  if (m_window) {
+    glViewport(0, 0, static_cast<int>(m_window->GetWidth()),
+               static_cast<int>(m_window->GetHeight()));
+    std::cout << "Renderer: Viewport set to " << m_window->GetWidth() << "x"
+              << m_window->GetHeight() << "\n";
+  }
 
-            // Debug output (limited)
-            static int renderCount = 0;
-            if (renderCount++ < 5)
-            { // Only show first few renders
-                std::cout << "Renderer: Drawing node '" << node->GetName()
-                          << "' with mesh ID " << renderComp->GetMeshId()
-                          << " at transform [" << worldTransform[3][0] << ","
-                          << worldTransform[3][1] << "," << worldTransform[3][2] << "]\n";
-            }
-        }
+  // Initialize cube geometry
+  InitializeCubeGeometry();
 
-        // Recursively render child nodes
-        for (const auto *child : node->GetChildren())
-        {
-            RenderNode(child, worldTransform);
-        }
-    }
+  std::cout << "Renderer: OpenGL state configured\n";
+}
 
-    void Renderer::EndFrame()
-    {
-        if (!m_initialized)
-        {
-            return;
-        }
+void Renderer::InitializeCubeGeometry() {
+  // Cube vertices with positions, normals, texture coords, and colors
+  float vertices[] = {
+      // Front face
+      -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+      0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+      0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+      -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
 
-        // TODO: Swap buffers
-        // SDL_GL_SwapWindow(window);
-    }
+      // Back face
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+      1.0f, 0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+      1.0f, 0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+      1.0f, -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+      1.0f};
 
-    void Renderer::SetViewMatrix(const glm::mat4 &view)
-    {
-        m_viewMatrix = view;
-    }
+  unsigned int indices[] = {// Front face
+                            0, 1, 2, 2, 3, 0,
+                            // Back face
+                            4, 5, 6, 6, 7, 4,
+                            // Left face
+                            7, 3, 0, 0, 4, 7,
+                            // Right face
+                            1, 5, 6, 6, 2, 1,
+                            // Bottom face
+                            0, 1, 5, 5, 4, 0,
+                            // Top face
+                            3, 2, 6, 6, 7, 3};
 
-    void Renderer::SetProjectionMatrix(const glm::mat4 &projection)
-    {
-        m_projectionMatrix = projection;
-    }
+  // Generate and bind VAO
+  glGenVertexArrays(1, &m_cubeVAO);
+  glBindVertexArray(m_cubeVAO);
 
-    void Renderer::SetupOpenGLState()
-    {
-        // Enable depth testing
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+  // Generate and bind VBO
+  glGenBuffers(1, &m_cubeVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, m_cubeVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-        // Set viewport
-        if (m_window)
-        {
-            glViewport(0, 0, static_cast<int>(m_window->GetWidth()), static_cast<int>(m_window->GetHeight()));
-            std::cout << "Renderer: Viewport set to " << m_window->GetWidth() << "x" << m_window->GetHeight() << "\n";
-        }
+  // Generate and bind EBO
+  glGenBuffers(1, &m_cubeEBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cubeEBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
 
-        // Initialize cube geometry
-        InitializeCubeGeometry();
+  // Set vertex attributes
+  // Position (location 0)
+  glVertexAttribPointer(0, 3, GL_FLOAT, 0, 12 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
 
-        std::cout << "Renderer: OpenGL state configured\n";
-    }
+  // Normal (location 1)
+  glVertexAttribPointer(1, 3, GL_FLOAT, 0, 12 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
 
-    void Renderer::InitializeCubeGeometry()
-    {
-        // Cube vertices with positions, normals, texture coords, and colors
-        float vertices[] = {
-            // Front face
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-            0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-            0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+  // Texture coordinates (location 2)
+  glVertexAttribPointer(2, 2, GL_FLOAT, 0, 12 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
-            // Back face
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-            0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-            -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
+  // Color (location 3)
+  glVertexAttribPointer(3, 4, GL_FLOAT, 0, 12 * sizeof(float),
+                        (void *)(8 * sizeof(float)));
+  glEnableVertexAttribArray(3);
 
-        unsigned int indices[] = {
-            // Front face
-            0, 1, 2, 2, 3, 0,
-            // Back face
-            4, 5, 6, 6, 7, 4,
-            // Left face
-            7, 3, 0, 0, 4, 7,
-            // Right face
-            1, 5, 6, 6, 2, 1,
-            // Bottom face
-            0, 1, 5, 5, 4, 0,
-            // Top face
-            3, 2, 6, 6, 7, 3};
+  // Unbind
+  glBindVertexArray(0);
 
-        // Generate and bind VAO
-        glGenVertexArrays(1, &m_cubeVAO);
-        glBindVertexArray(m_cubeVAO);
+  std::cout << "Renderer: Cube geometry initialized\n";
+}
 
-        // Generate and bind VBO
-        glGenBuffers(1, &m_cubeVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, m_cubeVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+void Renderer::DrawCube() {
+  if (m_cubeVAO == 0)
+    return;
 
-        // Generate and bind EBO
-        glGenBuffers(1, &m_cubeEBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_cubeEBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+  glBindVertexArray(m_cubeVAO);
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  glBindVertexArray(0);
+}
 
-        // Set vertex attributes
-        // Position (location 0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, 0, 12 * sizeof(float), (void *)0);
-        glEnableVertexAttribArray(0);
+void Renderer::UpdateFrameStats() {
+  auto now = std::chrono::high_resolution_clock::now();
+  double currentTime =
+      std::chrono::duration<double>(now.time_since_epoch()).count();
 
-        // Normal (location 1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, 0, 12 * sizeof(float), (void *)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+  double deltaTime = currentTime - m_lastFrameTime;
+  if (deltaTime > 0.0) {
+    m_fps = static_cast<float>(1.0 / deltaTime);
+  }
 
-        // Texture coordinates (location 2)
-        glVertexAttribPointer(2, 2, GL_FLOAT, 0, 12 * sizeof(float), (void *)(6 * sizeof(float)));
-        glEnableVertexAttribArray(2);
-
-        // Color (location 3)
-        glVertexAttribPointer(3, 4, GL_FLOAT, 0, 12 * sizeof(float), (void *)(8 * sizeof(float)));
-        glEnableVertexAttribArray(3);
-
-        // Unbind
-        glBindVertexArray(0);
-
-        std::cout << "Renderer: Cube geometry initialized\n";
-    }
-
-    void Renderer::DrawCube()
-    {
-        if (m_cubeVAO == 0)
-            return;
-
-        glBindVertexArray(m_cubeVAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
-    }
-
-    void Renderer::UpdateFrameStats()
-    {
-        auto now = std::chrono::high_resolution_clock::now();
-        double currentTime = std::chrono::duration<double>(now.time_since_epoch()).count();
-
-        double deltaTime = currentTime - m_lastFrameTime;
-        if (deltaTime > 0.0)
-        {
-            m_fps = static_cast<float>(1.0 / deltaTime);
-        }
-
-        m_lastFrameTime = currentTime;
-    }
+  m_lastFrameTime = currentTime;
+}
 
 } // namespace AIEngine
