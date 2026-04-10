@@ -40,6 +40,17 @@ if(WIN32)
 endif()
 
 # ---------------------------------------------------------------------------
+# Copy shaders to the output directory so the executable can find them at runtime.
+# Shaders are placed in a shaders/ subdirectory next to the executable.
+# ---------------------------------------------------------------------------
+add_custom_command(TARGET testgame POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory
+        "${CMAKE_SOURCE_DIR}/engine/shaders"
+        "$<TARGET_FILE_DIR:testgame>/shaders"
+    COMMENT "Copying shaders → $<TARGET_FILE_DIR:testgame>/shaders"
+)
+
+# ---------------------------------------------------------------------------
 # Windows + MinGW: note on static runtime linking
 # -static-libgcc/-static-libstdc++ are NOT applied here as the UCRT64
 # toolchain (msys2 ucrt64) handles CRT linking via ucrt.dll automatically.

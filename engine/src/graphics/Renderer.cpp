@@ -15,6 +15,7 @@
 #include "../../include/AIEngine/platform/Window.hpp"
 #include "../../include/AIEngine/scene/SceneNode.hpp"
 #include <GL/glew.h>
+#include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
 #include <chrono>
 #include <iostream>
@@ -61,71 +62,20 @@ bool Renderer::Initialize() {
   // Setup OpenGL state
   SetupOpenGLState();
 
-  // Create default shader with embedded source for now
-  std::string vertexSource = R"(
-#version 330 core
-layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec2 aTexCoord;
-layout (location = 3) in vec4 aColor;
-
-uniform mat4 uModel;
-uniform mat4 uView;
-uniform mat4 uProjection;
-
-out vec3 FragPos;
-out vec3 Normal;
-out vec2 TexCoord;
-out vec4 Color;
-
-void main() {
-    FragPos = vec3(uModel * vec4(aPosition, 1.0));
-    Normal = mat3(transpose(inverse(uModel))) * aNormal;
-    TexCoord = aTexCoord;
-    Color = aColor;
-    
-    gl_Position = uProjection * uView * vec4(FragPos, 1.0);
-}
-)";
-
-  std::string fragmentSource = R"(
-#version 330 core
-out vec4 FragColor;
-
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoord;  
-in vec4 Color;
-
-uniform vec3 uLightPos;
-uniform vec3 uLightColor;
-uniform vec3 uViewPos;
-
-void main() {
-    // Ambient
-    float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * uLightColor;
-    
-    // Diffuse
-    vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(uLightPos - FragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * uLightColor;
-    
-    // Specular
-    float specularStrength = 0.5;
-    vec3 viewDir = normalize(uViewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * uLightColor;
-    
-    vec3 result = (ambient + diffuse + specular) * Color.rgb;
-    FragColor = vec4(result, Color.a);
-}
-)";
+  // Resolve shader paths relative to the executable directory so they work
+  // regardless of the working directory (debugger, IDE, double-click, etc.)
+  std::string shaderDir;
+  char *basePath = SDL_GetBasePath();
+  if (basePath) {
+    shaderDir = basePath;
+    SDL_free(basePath);
+  } else {
+    shaderDir = "./";
+  }
 
   m_defaultShader =
-      std::make_unique<Shader>(vertexSource, fragmentSource, true);
+      std::make_unique<Shader>(shaderDir + "shaders/basic_vertex.glsl",
+                               shaderDir + "shaders/basic_fragment.glsl");
   if (!m_defaultShader->IsValid()) {
     std::cerr << "Renderer: Failed to create default shader\n";
     return false;
