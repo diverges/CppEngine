@@ -4,7 +4,7 @@
         {
             "label": "Build Debug (All)",
             "type": "shell",
-            "command": "cmake --preset debug && cmake --build --preset debug",
+            "command": "cmake --build --preset debug",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -25,7 +25,7 @@
         {
             "label": "Build Release (All)",
             "type": "shell",
-            "command": "cmake --preset release && cmake --build --preset release",
+            "command": "cmake --build --preset release",
             "group": "build",
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -43,7 +43,7 @@
         {
             "label": "Build Engine Only (Debug)",
             "type": "shell",
-            "command": "cmake --preset debug && cmake --build --preset debug --target AIEngine",
+            "command": "cmake --build --preset debug --target AIEngine",
             "group": "build",
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -53,7 +53,7 @@
         {
             "label": "Build Engine Only (Release)",
             "type": "shell",
-            "command": "cmake --preset release && cmake --build --preset release --target AIEngine",
+            "command": "cmake --build --preset release --target AIEngine",
             "group": "build",
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -63,7 +63,7 @@
         {
             "label": "Build TestGame Only (Debug)",
             "type": "shell",
-            "command": "cmake --preset debug && cmake --build --preset debug --target testgame",
+            "command": "cmake --build --preset debug --target testgame",
             "group": "test",
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -73,7 +73,7 @@
         {
             "label": "Build TestGame Only (Release)",
             "type": "shell",
-            "command": "cmake --preset release && cmake --build --preset release --target testgame",
+            "command": "cmake --build --preset release --target testgame",
             "group": "test",
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -96,45 +96,6 @@
             }
         },
         {
-            "label": "Run Unit Tests",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "test-unit"
-            ],
-            "group": "test",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": "$gcc"
-        },
-        {
-            "label": "Run Integration Tests",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "test-integration"
-            ],
-            "group": "test",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": "$gcc"
-        },
-        {
-            "label": "Run All Tests",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "test"
-            ],
-            "group": "test",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": "$gcc"
-        },
-        {
             "label": "Clean All",
             "type": "shell",
             "command": "cmake --build --preset debug --target clean; cmake --build --preset release --target clean",
@@ -145,37 +106,6 @@
             "presentation": {
                 "echo": true,
                 "reveal": "silent",
-                "focus": false,
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "Build Engine Tests",
-            "type": "shell",
-            "command": "make engine-tests",
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": "$gcc",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "Check Environment",
-            "type": "shell",
-            "command": "cmake --version && C:/msys64/ucrt64/bin/c++.exe --version",
-            "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
                 "focus": false,
                 "panel": "shared"
             }

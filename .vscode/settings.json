@@ -14,7 +14,6 @@
         "Get-FeaturePathsEnv": true,
         ".": true
     },
-    "C_Cpp.dim.inactiveRegions": true,
     "files.associations": {
         "*.hpp": "cpp",
         "*.cpp": "cpp",
