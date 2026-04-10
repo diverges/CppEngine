@@ -43,10 +43,13 @@ Unit tests are mandatory for all engine subsystems. Integration tests required f
 
 ## Build System Standards
 
-**Build Tool**: GNU Make is the mandated build system for simplicity and cross-platform support.
-**Dependencies**: Minimal external dependencies; prefer standard library and well-established libraries (SDL2, GLEW/GLAD).
-**Configuration**: Project must build with standard make commands without complex setup procedures.
-**Toolchain**: Support for GCC, Clang, and MSVC compilers across target platforms.
+**Build Tool**: CMake 3.20+ with `CMakePresets.json` is the mandated build system. Generator: `MinGW Makefiles` on Windows with the UCRT64 toolchain.
+**Build Commands**: `cmake --preset debug && cmake --build --preset debug` for debug; `cmake --preset release && cmake --build --preset release` for release; `cmake --build --preset debug --target run` to launch testgame.
+**Rationale**: Migrated from GNU Make (spec 007) for unified preset-based workflow, cross-platform CMake target model, and transitive dependency propagation via PUBLIC link interface.
+**Dependencies**: Minimal external dependencies; prefer standard library and well-established libraries (SDL2, GLEW/GLAD). All vendored deps under `engine/deps/`; declared as INTERFACE targets in `engine/cmake/VendoredDeps.cmake`.
+**Configuration**: Project must configure and build with standard `cmake --preset` commands without complex setup procedures.
+**Toolchain**: UCRT64/MinGW64 GCC on Windows. `CMAKE_CXX_LINK_EXECUTABLE` is overridden to remove `--out-implib` and `--whole-archive` workarounds required by CMake 4.x + GCC 15.2 on Windows-GNU.
+**Note on GNU Make**: Old Makefiles (`Makefile`, `engine/Makefile`, `testgame/Makefile`) have been removed as part of spec 007. Do not re-introduce them.
 
 ## Development Workflow
 

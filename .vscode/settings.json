@@ -9,7 +9,10 @@
     "chat.tools.terminal.autoApprove": {
         ".specify/scripts/bash/": true,
         ".specify/scripts/powershell/": true,
-        "make": true
+        "make": true,
+        "Test-Path": true,
+        "Get-FeaturePathsEnv": true,
+        ".": true
     },
     "C_Cpp.dim.inactiveRegions": true,
     "files.associations": {

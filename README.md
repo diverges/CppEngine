@@ -11,285 +11,187 @@
 - **Component System**: Scene graph nodes with attachable components (Transform, Render, Custom)
 - **High Performance**: 144+ FPS rendering with OpenGL 3.3+ core profile
 - **Cross-Platform Design**: SDL2 + OpenGL foundation for Windows, macOS, Linux
-- **Professional Build System**: GNU Make with debug/release configurations
+- **CMake Build System**: Preset-based debug/release builds with automatic source discovery
 - **Test Coverage**: Doctest framework with unit and integration testing
 - **Real 3D Graphics**: Complete OpenGL pipeline with GLEW, shaders, and geometry management
 
 ## 🚀 Quick Start
 
-### Windows Prerequisites (MSYS2 - Recommended)
+### Prerequisites
+
+**Windows (MSYS2 UCRT64 — recommended)**
 
 ```bash
 # Install MSYS2 from https://www.msys2.org/
-# Open MSYS2 terminal and install dependencies:
+# Open the UCRT64 terminal and install the toolchain:
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-cmake git
 
-pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-make
-pacman -S mingw-w64-x86_64-sdl2 mingw-w64-x86_64-glew 
-pacman -S mingw-w64-x86_64-glm git
-
-# Add to PATH: C:\msys64\mingw64\bin
+# Add to PATH: C:\msys64\ucrt64\bin
+# Install CMake for Windows from https://cmake.org/download/
+# (the standalone installer adds cmake.exe to the system PATH)
 ```
 
-### Linux Prerequisites
+**Linux**
 
 ```bash
 # Ubuntu/Debian
-sudo apt update
-sudo apt install build-essential make git
-sudo apt install libsdl2-dev libglew-dev libglm-dev
+sudo apt update && sudo apt install build-essential cmake git
 
-# Fedora/CentOS  
-sudo dnf install gcc-c++ make git
-sudo dnf install SDL2-devel glew-devel glm-devel
+# Fedora
+sudo dnf install gcc-c++ cmake git
 
-# Arch Linux
-sudo pacman -S base-devel git sdl2 glew glm
+# Arch
+sudo pacman -S base-devel cmake git
 ```
 
-### macOS Prerequisites
+**macOS**
 
 ```bash
-# Install Homebrew (https://brew.sh/)
-brew install sdl2 glew glm
-
-# Xcode command line tools
 xcode-select --install
+brew install cmake
 ```
 
-## 🔧 Build Instructions - New Unified Workflow
+> All third-party libraries (SDL2, GLEW, GLM, GLAD, doctest) are bundled under
+> `engine/deps/` — no separate installation is required.
 
-### Quick Build & Run (Root Makefile)
+## 🔧 Build Instructions
+
+### Debug build
 
 ```bash
-# 1. Clone repository
 git clone <repository-url> AIEngine
 cd AIEngine
 
-# 2. Verify environment (optional but recommended)
-make check-env
-
-# 3. Build entire project (engine + testgame) 
-make debug
-# ✅ Output: bin/debug/libAIEngine.a and bin/debug/testgame.exe
-
-# 4. Run the demo
-make run
-# 🎮 Opens window with rotating 3D cube at 144+ FPS
+cmake --preset debug
+cmake --build --preset debug
+# ✅ Output: bin/debug/libAIEngine.a  bin/debug/testgame.exe
+#            bin/debug/SDL2.dll       bin/debug/glew32.dll
 ```
 
-### Available Commands
+### Release build
 
 ```bash
-# Build Commands
-make debug     # Build debug variant (default)
-make release   # Build release variant
-make all       # Build all components  
-make engine    # Build engine library only
-make testgame  # Build testgame (includes engine dependency)
-
-# Test Commands
-make test             # Run all tests (unit + integration)
-make test-unit        # Run engine unit tests only  
-make test-integration # Run integration tests (testgame execution)
-
-# Utility Commands
-make run       # Execute testgame
-make clean     # Remove all build artifacts
-make info      # Show build configuration  
-make help      # Show all available targets
+cmake --preset release
+cmake --build --preset release
+# ✅ Output: bin/release/libAIEngine.a  bin/release/testgame.exe
 ```
 
-### Build Configurations
+### Run the demo
 
 ```bash
-# Development build (debug symbols, optimizations disabled)
-make debug
-
-# Production build (optimized, debug symbols removed)  
-make release
-
-# Clean and rebuild everything
-make clean && make debug
-
-# Individual component builds (if needed)
-make engine     # Engine library only
-make testgame   # TestGame only (builds engine first)
+cmake --build --preset debug --target run
+# 🎮 Opens a 1280×720 window with a rotating 3D cube at 144+ FPS
+# Press ESC or close the window to exit
 ```
 
-### Output Structure
+### Clean build outputs
 
-After building, artifacts are organized in centralized directories:
+```bash
+cmake --build --preset debug --target clean
+cmake --build --preset release --target clean
+# Removes compiled objects, libraries, and executables.
+# The build directory and CMake-generated files are preserved,
+# so the next build does not need to re-run cmake --preset.
+```
+
+### Output structure
 
 ```
 bin/
-├── debug/           # Debug build outputs
-│   ├── libAIEngine.a     # Engine static library
-│   ├── testgame.exe      # TestGame executable  
-│   └── engine_tests.exe  # Unit tests (when available)
-└── release/         # Release build outputs
-    ├── libAIEngine.a
+├── debug/
+│   ├── libAIEngine.a   # Engine static library (with debug symbols)
+│   ├── testgame.exe    # Demo application
+│   ├── SDL2.dll        # Runtime dependency (copied automatically)
+│   └── glew32.dll      # Runtime dependency (copied automatically)
+└── release/
+    ├── libAIEngine.a   # Optimised engine library
     ├── testgame.exe
-    └── engine_tests.exe
+    ├── SDL2.dll
+    └── glew32.dll
 ```
 
-### Legacy Component Build (Still Supported)
-
-For component-isolated development, individual builds remain available:
+### Verify the environment
 
 ```bash
-# Engine library only (legacy method)
-cd engine
-make clean && make
-
-# TestGame only (legacy method)
-cd testgame  
-make clean && make
+cmake --version        # 3.20+ required
+c++  --version         # GCC 10+ or Clang 12+ recommended
 ```
 
-### Verify Installation
-
-```bash
-# 1. Check environment setup
-make check-env
-# Should show: g++ and make found in PATH
-
-# 2. Test complete build system  
-make debug
-# Expected output:
-# - "Building engine (debug)..."
-# - "Built engine library: bin/debug/libAIEngine.a"
-# - "Building testgame (debug)..."  
-# - "Built test game: bin/debug/testgame.exe"
-
-# 3. Test execution
-make run
-# Expected output:
-# - Window opens (1280x720)
-# - 3D cube rotating smoothly  
-# - FPS counter showing 144+ FPS
-# - Press ESC to exit cleanly
-
-# 4. Verify output structure
-ls bin/debug/
-# Should show: libAIEngine.a, testgame.exe
-```
-
-## 📁 Project Structure - Git Ready Multi-Developer Layout
+## 📁 Project Structure
 
 ```
-AIEngine/                       # 🎯 Repository root with unified build system
-├── Makefile                   # 🔧 Root build orchestration (NEW)
-├── bin/                       # 📦 Centralized build outputs (NEW)  
-│   ├── debug/                 # Debug build artifacts
-│   │   ├── libAIEngine.a      # Engine static library
-│   │   ├── testgame.exe       # TestGame executable
-│   │   └── engine_tests.exe   # Unit tests (when available)
-│   └── release/               # Release build artifacts
-│       ├── libAIEngine.a      
-│       ├── testgame.exe       
-│       └── engine_tests.exe   
+AIEngine/
+├── CMakeLists.txt              # Root CMake — output dirs, sub-projects, run target
+├── CMakePresets.json           # debug and release presets (MinGW Makefiles generator)
+├── bin/                        # Build outputs (git-ignored)
+│   ├── debug/                  # Debug artifacts
+│   └── release/                # Release artifacts
+├── build/                      # CMake intermediate files (git-ignored)
+│   ├── debug/
+│   └── release/
 │
-├── engine/                     # 🎯 Core engine library  
-│   ├── src/                   
-│   │   ├── core/              # Engine lifecycle, initialization
-│   │   ├── scene/             # Scene graph, hierarchy management  
-│   │   ├── graphics/          # OpenGL renderer, meshes, shaders
-│   │   ├── components/        # Transform, Render, custom components
-│   │   ├── math/              # GLM math utilities, transforms
-│   │   └── platform/          # SDL2 windowing, input abstraction
-│   ├── include/AIEngine/      # 📚 Public API headers
-│   ├── deps/                  # 📦 Dependencies (SDL2, GLEW, GLM, doctest)
-│   ├── shaders/               # 🎨 GLSL vertex/fragment shaders
-│   ├── build/                 # 🔨 Intermediate build files
-│   └── Makefile               # 🔧 Engine component build (MODIFIED)
+├── engine/                     # Core engine library
+│   ├── CMakeLists.txt          # AIEngine STATIC target, auto-discovers src/**/*.cpp
+│   ├── VendoredDeps.cmake      # IMPORTED targets for all bundled dependencies
+│   ├── src/
+│   │   ├── core/               # Engine lifecycle, subsystem manager
+│   │   ├── scene/              # Scene graph, node hierarchy
+│   │   ├── graphics/           # OpenGL renderer, meshes, shaders
+│   │   ├── components/         # TransformComponent, RenderComponent
+│   │   ├── math/               # GLM math utilities
+│   │   └── platform/           # SDL2 windowing, OpenGL context
+│   ├── include/AIEngine/       # Public API headers
+│   ├── deps/                   # Bundled third-party libraries
+│   │   ├── SDL2/               # Windowing and input
+│   │   ├── glew/               # OpenGL extension loader
+│   │   ├── glm/                # Mathematics (header-only)
+│   │   ├── glad/               # OpenGL loader (header-only)
+│   │   └── doctest/            # Unit testing (header-only)
+│   └── shaders/                # GLSL vertex and fragment shaders
 │
-├── testgame/                   # 🎮 Example game application  
-│   ├── src/                   # Game implementation
-│   │   ├── main.cpp           # Application entry point
-│   │   ├── TestGame.hpp       # Game class header
-│   │   └── TestGame.cpp       # Game logic, scene setup
-│   ├── build/                 # 🔨 Intermediate build files
-│   └── Makefile               # 🔧 Game component build (MODIFIED)
+├── testgame/                   # Demo application
+│   ├── CMakeLists.txt          # testgame executable, links only AIEngine
+│   └── src/
+│       ├── main.cpp
+│       ├── TestGame.hpp
+│       └── TestGame.cpp
 │
-├── tests/                      # 🧪 Testing infrastructure
-├── docs/                      # 📖 Architecture and API documentation
-└── specs/                     # 📋 Project specifications and features
+├── tests/                      # Test infrastructure
+├── docs/                       # Architecture and API documentation
+└── specs/                      # Project specifications
 ```
 
-## 🛠️ VS Code Development Setup (NEW)
+## 🛠️ VS Code Development Setup
 
-The project now includes complete VS Code integration for professional C++ development:
+The project includes complete VS Code integration for C++ development.
 
-### Automatic Setup
+### Tasks (Ctrl+Shift+P → "Tasks: Run Task")
 
-```bash
-# Open workspace in VS Code
-code .
-```
+| Task | Command |
+|------|---------|
+| **Build Debug (All)** *(default)* | `cmake --preset debug && cmake --build --preset debug` |
+| **Build Release (All)** | `cmake --preset release && cmake --build --preset release` |
+| **Run TestGame** | `cmake --build --preset debug --target run` |
+| Build Engine Only (Debug) | `cmake --preset debug && cmake --build --preset debug --target AIEngine` |
+| Build TestGame Only (Debug) | `cmake --preset debug && cmake --build --preset debug --target testgame` |
+| Clean All | `cmake --build --preset debug --target clean` + release |
+| Check Environment | `cmake --version && c++ --version` |
 
-**What happens automatically**:
+### Debugging (F5)
 
-- ✅ **IntelliSense**: Auto-completion and code navigation for engine and game code
-- ✅ **Debugging**: F5 debugging with GDB integration
-- ✅ **Build Tasks**: Ctrl+Shift+P → "Run Task" for unified builds
-- ✅ **Code Navigation**: Go to definition/declaration across components
+Press **F5** to start a debug session for `testgame.exe`:
 
-### VS Code Features
+- Breakpoints work in both engine and testgame source files
+- Variable inspection for engine objects and game state
+- GDB integration via the C++ extension pack
 
-#### 🐛 Debugging Experience - User Story 5
+### IntelliSense
 
-**One-Click Debugging**: Press `F5` to start debugging testgame.exe:
+The included `c_cpp_properties.json` configures include paths for the engine public API, bundled deps, and testgame sources, providing:
 
-- ✅ Automatic debug build of engine and testgame  
-- ✅ Breakpoints work in both engine and testgame source files
-- ✅ Variable inspection for engine objects and game state
-- ✅ Debug console with C++ expression evaluation
-- ✅ Integrated terminal shows application output
-
-**Debug Configurations Available**:
-
-- `Debug TestGame` - Main debugging target (testgame.exe)
-- `Debug Engine Tests` - Unit test debugging (engine_tests.exe when available)
-
-#### 🧠 IntelliSense & Code Navigation - User Story 4
-
-**What works out-of-the-box**:
-
-- ✅ Auto-completion for AIEngine namespace and all public APIs
-- ✅ Error highlighting and syntax validation
-- ✅ Go to Definition (F12) across engine headers and source files  
-- ✅ Find All References (Shift+F12) for functions, classes, variables
-- ✅ Header/source switching (Alt+O) for rapid navigation
-- ✅ Symbol search (Ctrl+T) across entire project
-
-**IntelliSense Coverage**:
-
-- Engine public API (`include/AIEngine/`)
-- Component system (`components/`, `core/`)  
-- Graphics pipeline (`graphics/`, `shaders/`)
-- Math utilities (`math/Transform.hpp`)
-- TestGame implementation (`testgame/src/`)
-
-### Development Workflow
-
-```bash
-# 1. Open workspace
-code .
-
-# 2. Make changes to engine or testgame code  
-# IntelliSense provides real-time feedback
-
-# 3. Debug your changes
-# Press F5 → automatic build → debugging starts
-
-# 4. Set breakpoints and inspect
-# Variables panel shows complete engine state
-
-# 5. Build explicitly if needed
-# Ctrl+Shift+P → "Tasks: Run Task" → "Make: Engine Debug"
-```
-
-**Prerequisites**: VS Code with C++ extension pack installed
+- Auto-completion across the `AIEngine` namespace
+- Go to Definition (F12) and Find All References (Shift+F12)
+- Real-time error highlighting
 
 ## 🎯 Engine API Overview
 
@@ -381,23 +283,21 @@ The included `testgame` application demonstrates:
 
 ## 🧪 Testing
 
-### Run All Tests
-
 ```bash
-# Engine unit tests
-cd engine && make test
+# Unit tests
+make test-unit
 
-# Integration tests  
-cd tests && make run-all
+# Integration tests
+make test-integration
 
-# Performance benchmarks
-cd testgame && make bench
+# All tests
+make test
 ```
 
 ### Test Coverage
 
 - ✅ **Scene Graph**: Node creation, hierarchy, component attachment
-- ✅ **Transform System**: Matrix calculations, hierarchy inheritance  
+- ✅ **Transform System**: Matrix calculations, hierarchy inheritance
 - ✅ **Rendering Pipeline**: Mesh creation, shader compilation, frame rendering
 - ✅ **Memory Management**: RAII cleanup, no memory leaks
 - ✅ **Error Handling**: Graceful failure scenarios
@@ -418,50 +318,60 @@ cd testgame && make bench
 - **OpenGL State Caching**: Avoids redundant state changes
 - **Transform Caching**: World matrices computed only when needed
 
-## 🔧 Build System Features
+## 🔧 Build System Details
 
-### Available Make Targets
+The project uses **CMake 3.20+** with `CMakePresets.json` for a unified preset-based workflow.
 
-```bash
-# Engine library
-make                # Standard build
-make debug          # Debug build (-g -O0)  
-make release        # Optimized build (-O3 -DNDEBUG)
-make clean          # Clean build artifacts
-make test           # Run unit tests
+### Presets
 
-# Test game
-make                # Build game executable
-make run           # Build and run game
-make debug         # Debug build
-make clean         # Clean artifacts
-```
+| Preset | Generator | Build dir | Config |
+|--------|-----------|-----------|--------|
+| `debug` | MinGW Makefiles | `build/debug` | Debug |
+| `release` | MinGW Makefiles | `build/release` | Release |
+
+### Adding new source files
+
+Source files are auto-discovered via `file(GLOB_RECURSE ... CONFIGURE_DEPENDS)`. CMake will detect new `*.cpp` files under `engine/src/` or `testgame/src/` on the next build invocation — no changes to any CMakeLists file required.
+
+### Linking model
+
+`AIEngine` declares all third-party deps (`SDL2`, `GLEW`, `GLM`, `GLAD`, `opengl32`, `gdi32`) as `PUBLIC`. `testgame` only links `AIEngine` and inherits everything transitively.
+
+### Windows / MinGW note
+
+`CMAKE_CXX_LINK_EXECUTABLE` is overridden in the root `CMakeLists.txt` to remove the `--out-implib` and `--whole-archive` flags that CMake 4.x adds by default for Windows-GNU. These flags cause `ld.exe` to exit with code 5 on UCRT64/GCC 15+. The vendored `.a` libraries are linked via `-l` flags (not absolute paths) for the same reason.
 
 ## 🐛 Troubleshooting
 
-### Common Build Issues
-
-**Problem**: Missing SDL2/GLEW headers
+**CMake can't find the compiler**
 
 ```bash
-# Solution: Install development packages
-pacman -S mingw-w64-x86_64-sdl2 mingw-w64-x86_64-glew  # Windows
-sudo apt install libsdl2-dev libglew-dev               # Linux
+# Ensure the UCRT64 bin directory is on PATH
+# Windows: C:\msys64\ucrt64\bin
+cmake --preset debug  # should detect c++.exe automatically
 ```
 
-**Problem**: Runtime crashes
+**`ld returned 5` or `ld returned 1` on Windows**
+
+This is a known issue with CMake 4.x + GCC 15 on UCRT64. The root `CMakeLists.txt` already contains the fix (`CMAKE_CXX_LINK_EXECUTABLE` override). If you see this after a fresh clone, run `cmake --preset debug` again to regenerate the build files.
+
+**Runtime crash — window doesn't open**
 
 ```bash
-# Solution: Check graphics drivers
-# Update to latest NVIDIA/AMD drivers
 # Verify OpenGL 3.3+ support
+# Update GPU drivers (NVIDIA/AMD/Intel)
+# Check that SDL2.dll and glew32.dll are in bin/debug/ alongside testgame.exe
 ```
 
-### Debug Features
+**IntelliSense not working in VS Code**
 
-- **Verbose Logging**: Set `ENGINE_VERBOSE=1` for detailed output
-- **Frame Timing**: Built-in FPS counter and frame time reporting
-- **OpenGL Debug**: Automatic error checking in debug builds
+Reload the window after the first configure: `Ctrl+Shift+P → "Developer: Reload Window"`.
+
+### Debug output
+
+- Enable verbose logging: set `ENGINE_VERBOSE=1` in the environment before running
+- Frame timing and FPS are printed to stdout every 2 seconds during a run
+- OpenGL errors are checked automatically in debug builds
 
 ## 📈 Future Roadmap
 
@@ -484,11 +394,11 @@ We welcome contributions! Please see:
 ### Development Setup
 
 1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Make changes following code style
 4. Add tests for new functionality
 5. Ensure all tests pass: `make test`
-6. Submit pull request
+6. Submit a pull request
 
 ## 📝 License
 
@@ -506,7 +416,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Status**: ✅ Production Ready  
 **Performance**: 144+ FPS ✅ | Low Memory Usage ✅ | Fast Builds ✅  
-**Platform Support**: Windows ✅ | Linux ✅ | macOS 🔄  
+**Build System**: CMake 3.20+ with presets ✅  
+**Platform Support**: Windows (UCRT64/MinGW) ✅ | Linux ✅ | macOS 🔄  
 
 For detailed system design, see [Architecture Documentation](docs/architecture.md)
 
