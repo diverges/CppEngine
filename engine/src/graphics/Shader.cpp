@@ -8,7 +8,7 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/graphics/Shader.hpp"
+#include "Shader.hpp"
 #include <GL/glew.h>
 #include <fstream>
 #include <iostream>

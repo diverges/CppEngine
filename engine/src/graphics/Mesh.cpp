@@ -8,7 +8,7 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/graphics/Mesh.hpp"
+#include "Mesh.hpp"
 #include <iostream>
 
 namespace AIEngine {

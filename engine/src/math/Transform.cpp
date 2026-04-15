@@ -14,7 +14,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
-#include "../../include/AIEngine/math/Transform.hpp"
+#include "Transform.hpp"
 
 namespace AIEngine {
 namespace Math {

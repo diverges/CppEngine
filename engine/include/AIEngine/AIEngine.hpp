@@ -16,30 +16,20 @@
 #define AIENGINE_VERSION_MINOR 0
 #define AIENGINE_VERSION_PATCH 0
 
-// Core engine systems
-#include "core/Component.hpp"
-#include "core/Engine.hpp"
+// Setting Structs
+#include "core/EngineConfig.hpp"
 
-// Scene graph and hierarchy
+// Core engine systems
+#include "core/Engine.hpp"
+#include "core/Node.hpp"
+
+// Scene
 #include "scene/SceneGraph.hpp"
 #include "scene/SceneNode.hpp"
 
-// Component system
-#include "components/RenderComponent.hpp"
-#include "components/TransformComponent.hpp"
-
-// Graphics and rendering
-#include "graphics/GeometryFactory.hpp"
-#include "graphics/Mesh.hpp"
-#include "graphics/Renderer.hpp"
-#include "graphics/Shader.hpp"
-
-// Mathematics utilities
-#include "math/Transform.hpp"
-
-// Platform abstraction (when implemented)
-// #include "platform/Window.hpp"
-// #include "platform/Input.hpp"
+// Node types
+#include "nodes/RenderNode.hpp"
+#include "nodes/TransformNode.hpp"
 
 /**
  * @namespace AIEngine
@@ -102,23 +92,6 @@ inline bool IsVersionCompatible(int major, int minor) {
   return (AIENGINE_VERSION_MAJOR == major && AIENGINE_VERSION_MINOR >= minor);
 }
 
-/**
- * @brief Initialize engine global systems
- *
- * Called automatically by Engine::Initialize(), but can be called
- * manually if using engine components independently.
- *
- * @return true if initialization successful
- */
-bool InitializeGlobalSystems();
-
-/**
- * @brief Shutdown engine global systems
- *
- * Called automatically by Engine::Shutdown(), cleans up global
- * resources and systems.
- */
-void ShutdownGlobalSystems();
 } // namespace AIEngine
 
 // Educational note: This convenience header allows applications to include

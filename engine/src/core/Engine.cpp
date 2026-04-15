@@ -8,15 +8,16 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/core/Engine.hpp"
+#include <AIEngine/core/Engine.hpp>
+#include <AIEngine/core/EngineConfig.hpp>
 
 #include <chrono>
 #include <iostream>
 
-#include "../../include/AIEngine/core/EngineSystemManager.hpp"
-#include "../../include/AIEngine/graphics/Renderer.hpp"
-#include "../../include/AIEngine/platform/Window.hpp"
-#include "../../include/AIEngine/scene/SceneGraph.hpp"
+#include "../graphics/Renderer.hpp"
+#include "../platform/Window.hpp"
+#include "EngineSystemManager.hpp"
+#include <AIEngine/scene/SceneGraph.hpp>
 
 namespace AIEngine {
 
@@ -235,20 +236,6 @@ double Engine::GetUptime() const {
                     .count();
 
   return uptime / 1000.0; // Convert to seconds
-}
-
-/**
- * Global system functions
- */
-bool InitializeGlobalSystems() {
-  std::cout << "AIEngine: Initializing global systems\n";
-  // TODO: Initialize logging, memory pools, etc.
-  return true;
-}
-
-void ShutdownGlobalSystems() {
-  std::cout << "AIEngine: Shutting down global systems\n";
-  // TODO: Cleanup global resources
 }
 
 } // namespace AIEngine

@@ -1,4 +1,4 @@
-#include "AIEngine/core/EngineSystemDescriptor.hpp"
+#include "EngineSystemDescriptor.hpp"
 
 #include <cstdint>
 

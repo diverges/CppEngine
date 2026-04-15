@@ -20,10 +20,11 @@ add_library(AIEngine STATIC ${AIENGINE_SOURCES})
 # C++17 declared PUBLIC so consumers (testgame) inherit it automatically
 target_compile_features(AIEngine PUBLIC cxx_std_17)
 
-# Public include path — consumers use <AIEngine/...> includes
+# Public include path — consumers use <AIEngine/...> for the umbrella header
 target_include_directories(AIEngine PUBLIC include)
 
-# Internal include path for src/ files that include deps directly
+# src/ is also public so headers co-located with their .cpp are accessible
+# as <core/Engine.hpp>, <scene/SceneNode.hpp>, etc.
 target_include_directories(AIEngine PRIVATE src)
 
 # ---------------------------------------------------------------------------

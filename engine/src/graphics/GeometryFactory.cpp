@@ -8,7 +8,7 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/graphics/GeometryFactory.hpp"
+#include "GeometryFactory.hpp"
 #include <iostream>
 
 namespace AIEngine {

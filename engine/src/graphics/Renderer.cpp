@@ -8,12 +8,12 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/graphics/Renderer.hpp"
-#include "../../include/AIEngine/components/RenderComponent.hpp"
-#include "../../include/AIEngine/components/TransformComponent.hpp"
-#include "../../include/AIEngine/graphics/Shader.hpp"
-#include "../../include/AIEngine/platform/Window.hpp"
-#include "../../include/AIEngine/scene/SceneNode.hpp"
+#include "Renderer.hpp"
+#include "../platform/Window.hpp"
+#include "Shader.hpp"
+#include <AIEngine/nodes/RenderNode.hpp>
+#include <AIEngine/nodes/TransformNode.hpp>
+#include <AIEngine/scene/SceneNode.hpp>
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -95,7 +95,7 @@ bool Renderer::Initialize() {
   }
 
   // Setup default view matrix (camera at origin looking down -Z)
-  m_viewMatrix = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), // Camera position
+  m_viewMatrix = glm::lookAt(glm::vec3(0.0f, 3.0f, 3.0f), // Camera position
                              glm::vec3(0.0f, 0.0f, 0.0f), // Look at origin
                              glm::vec3(0.0f, 1.0f, 0.0f)  // Up vector
   );
@@ -161,14 +161,14 @@ void Renderer::RenderNode(const SceneNode *node,
   // Calculate world transform for this node
   glm::mat4 worldTransform = parentTransform;
 
-  // Apply node's local transform if it has a TransformComponent
-  const auto *transformComp = node->GetComponent<TransformComponent>();
+  // Apply node's local transform if it has a TransformNode
+  const auto *transformComp = node->GetNode<AIEngine::TransformNode>();
   if (transformComp) {
     worldTransform = parentTransform * transformComp->GetWorldMatrix();
   }
 
-  // Render this node if it has a RenderComponent
-  const auto *renderComp = node->GetComponent<RenderComponent>();
+  // Render this node if it has a RenderNode
+  const auto *renderComp = node->GetNode<AIEngine::RenderNode>();
   if (renderComp && renderComp->IsVisible()) {
     // Set model matrix in shader
     if (m_defaultShader && m_defaultShader->IsValid()) {

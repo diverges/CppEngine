@@ -1,7 +1,7 @@
 /**
  * SceneNode.inl - Template Implementation File
  *
- * Template method implementations for SceneNode component management.
+ * Template method implementations for single-payload node management.
  * This file is included at the end of SceneNode.hpp.
  *
  * @version 1.0.0
@@ -12,87 +12,48 @@
 
 namespace AIEngine {
 
-template <typename T, typename... Args>
-T *SceneNode::AddComponent(Args &&...args) {
-  static_assert(std::is_base_of_v<IComponent, T>,
-                "T must inherit from IComponent");
+template <typename T, typename... Args> T *SceneNode::SetNode(Args &&...args) {
+  static_assert(std::is_base_of_v<INode, T>, "T must inherit from INode");
 
-  auto typeId = T::GetStaticTypeID();
-
-  // Check if component already exists
-  auto it = m_components.find(typeId);
-  if (it != m_components.end()) {
-    // Component already exists, return existing
-    return static_cast<T *>(it->second.get());
+  // Detach existing node first
+  if (m_node) {
+    m_node->OnDetach(this);
+    m_node->SetOwner(nullptr);
   }
 
-  // Create new component
-  auto component = std::make_unique<T>(std::forward<Args>(args)...);
-  T *componentPtr = component.get();
+  // Create and attach new node
+  auto newNode = std::make_unique<T>(std::forward<Args>(args)...);
+  T *nodePtr = newNode.get();
+  m_node = std::move(newNode);
 
-  // Add to component map
-  m_components[typeId] = std::move(component);
+  nodePtr->SetOwner(this);
+  nodePtr->OnAttach(this);
 
-  // Set component ownership and notify attachment
-  componentPtr->SetOwner(this);
-  componentPtr->OnAttach(this);
-
-  return componentPtr;
+  return nodePtr;
 }
 
-template <typename T> T *SceneNode::GetComponent() {
-  static_assert(std::is_base_of_v<IComponent, T>,
-                "T must inherit from IComponent");
+template <typename T> T *SceneNode::GetNode() {
+  static_assert(std::is_base_of_v<INode, T>, "T must inherit from INode");
 
-  auto typeId = T::GetStaticTypeID();
-  auto it = m_components.find(typeId);
-
-  if (it != m_components.end()) {
-    return static_cast<T *>(it->second.get());
+  if (m_node && m_node->GetTypeID() == T::GetStaticTypeID()) {
+    return static_cast<T *>(m_node.get());
   }
-
   return nullptr;
 }
 
-template <typename T> const T *SceneNode::GetComponent() const {
-  static_assert(std::is_base_of_v<IComponent, T>,
-                "T must inherit from IComponent");
+template <typename T> const T *SceneNode::GetNode() const {
+  static_assert(std::is_base_of_v<INode, T>, "T must inherit from INode");
 
-  auto typeId = T::GetStaticTypeID();
-  auto it = m_components.find(typeId);
-
-  if (it != m_components.end()) {
-    return static_cast<const T *>(it->second.get());
+  if (m_node && m_node->GetTypeID() == T::GetStaticTypeID()) {
+    return static_cast<const T *>(m_node.get());
   }
-
   return nullptr;
 }
 
-template <typename T> bool SceneNode::RemoveComponent() {
-  static_assert(std::is_base_of_v<IComponent, T>,
-                "T must inherit from IComponent");
+template <typename T> bool SceneNode::HasNode() const {
+  static_assert(std::is_base_of_v<INode, T>, "T must inherit from INode");
 
-  auto typeId = T::GetStaticTypeID();
-  auto it = m_components.find(typeId);
-
-  if (it != m_components.end()) {
-    // Notify component of detachment
-    it->second->OnDetach(this);
-
-    // Remove from map
-    m_components.erase(it);
-    return true;
-  }
-
-  return false;
-}
-
-template <typename T> bool SceneNode::HasComponent() const {
-  static_assert(std::is_base_of_v<IComponent, T>,
-                "T must inherit from IComponent");
-
-  auto typeId = T::GetStaticTypeID();
-  return m_components.find(typeId) != m_components.end();
+  return m_node && m_node->GetTypeID() == T::GetStaticTypeID();
 }
 
 } // namespace AIEngine

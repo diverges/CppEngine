@@ -8,7 +8,7 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/platform/Window.hpp"
+#include "Window.hpp"
 #include <iostream>
 
 // Include real SDL2 headers

@@ -1,4 +1,4 @@
-#include "AIEngine/core/IEngineSubsystem.hpp"
+#include "IEngineSubsystem.hpp"
 
 namespace AIEngine {
 

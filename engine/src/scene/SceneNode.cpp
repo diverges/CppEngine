@@ -8,8 +8,8 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/scene/SceneNode.hpp"
-#include "../../include/AIEngine/graphics/Renderer.hpp"
+#include <AIEngine/scene/SceneNode.hpp>
+#include "../graphics/Renderer.hpp"
 #include <algorithm>
 
 namespace AIEngine {
@@ -21,27 +21,23 @@ SceneNode::SceneNode(const std::string &name)
     : m_name(name), m_id(s_nextId++) {}
 
 SceneNode::~SceneNode() {
-  // Notify all components of detachment
-  for (auto &[typeId, component] : m_components) {
-    component->OnDetach(this);
+  // Notify payload of detachment
+  if (m_node) {
+    m_node->OnDetach(this);
   }
-
-  // Clear components (automatic cleanup via unique_ptr)
-  m_components.clear();
 
   // Clear children (automatic cleanup via unique_ptr)
   m_children.clear();
 }
 
 SceneNode::SceneNode(SceneNode &&other) noexcept
-    : m_components(std::move(other.m_components)),
-      m_children(std::move(other.m_children)), m_parent(other.m_parent),
-      m_name(std::move(other.m_name)), m_id(other.m_id),
-      m_active(other.m_active) {
+    : m_node(std::move(other.m_node)), m_children(std::move(other.m_children)),
+      m_parent(other.m_parent), m_name(std::move(other.m_name)),
+      m_id(other.m_id), m_active(other.m_active) {
 
-  // Update component ownership
-  for (auto &[typeId, component] : m_components) {
-    component->SetOwner(this);
+  // Update payload ownership
+  if (m_node) {
+    m_node->SetOwner(this);
   }
 
   // Update child parent pointers
@@ -56,13 +52,13 @@ SceneNode::SceneNode(SceneNode &&other) noexcept
 
 SceneNode &SceneNode::operator=(SceneNode &&other) noexcept {
   if (this != &other) {
-    // Clean up current resources
-    for (auto &[typeId, component] : m_components) {
-      component->OnDetach(this);
+    // Clean up current payload
+    if (m_node) {
+      m_node->OnDetach(this);
     }
 
     // Move data
-    m_components = std::move(other.m_components);
+    m_node = std::move(other.m_node);
     m_children = std::move(other.m_children);
     m_parent = other.m_parent;
     m_name = std::move(other.m_name);
@@ -70,8 +66,8 @@ SceneNode &SceneNode::operator=(SceneNode &&other) noexcept {
     m_active = other.m_active;
 
     // Update ownership
-    for (auto &[typeId, component] : m_components) {
-      component->SetOwner(this);
+    if (m_node) {
+      m_node->SetOwner(this);
     }
 
     for (auto &child : m_children) {
@@ -85,38 +81,33 @@ SceneNode &SceneNode::operator=(SceneNode &&other) noexcept {
   return *this;
 }
 
-std::vector<IComponent *> SceneNode::GetAllComponents() {
-  std::vector<IComponent *> components;
-  components.reserve(m_components.size());
-
-  for (auto &[typeId, component] : m_components) {
-    components.push_back(component.get());
+void SceneNode::AttachNode(std::unique_ptr<INode> node) {
+  if (m_node) {
+    m_node->OnDetach(this);
+    m_node->SetOwner(nullptr);
   }
-
-  return components;
+  m_node = std::move(node);
+  if (m_node) {
+    m_node->SetOwner(this);
+    m_node->OnAttach(this);
+  }
 }
 
-std::vector<const IComponent *> SceneNode::GetAllComponents() const {
-  std::vector<const IComponent *> components;
-  components.reserve(m_components.size());
-
-  for (const auto &[typeId, component] : m_components) {
-    components.push_back(component.get());
+std::unique_ptr<INode> SceneNode::DetachNode() {
+  if (m_node) {
+    m_node->OnDetach(this);
+    m_node->SetOwner(nullptr);
   }
-
-  return components;
+  return std::move(m_node);
 }
+
+INode *SceneNode::GetNode() { return m_node.get(); }
+
+const INode *SceneNode::GetNode() const { return m_node.get(); }
 
 void SceneNode::Update(double deltaTime) {
   if (!m_active) {
     return; // Skip inactive nodes
-  }
-
-  // Update all active components
-  for (auto &[typeId, component] : m_components) {
-    if (component->IsActive()) {
-      component->OnUpdate(deltaTime);
-    }
   }
 
   // Update all children recursively
@@ -128,13 +119,6 @@ void SceneNode::Update(double deltaTime) {
 void SceneNode::Render(Renderer *renderer) {
   if (!m_active || !renderer) {
     return; // Skip inactive nodes or invalid renderer
-  }
-
-  // Render all active components
-  for (auto &[typeId, component] : m_components) {
-    if (component->IsActive()) {
-      component->OnRender(renderer);
-    }
   }
 
   // Render all children recursively
@@ -150,13 +134,12 @@ void SceneNode::SetActive(bool active) {
 
   m_active = active;
 
-  // Propagate to components
-  for (auto &[typeId, component] : m_components) {
-    component->SetActive(active);
+  // Propagate to payload
+  if (m_node) {
+    m_node->SetActive(active);
   }
 
   // Note: Children maintain their own active state
-  // (parent deactivation doesn't permanently disable children)
 }
 
 SceneNode *SceneNode::AddChild(std::unique_ptr<SceneNode> child) {

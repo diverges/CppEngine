@@ -1,5 +1,5 @@
 /**
- * TransformComponent.cpp - Transform Component Implementation
+ * TransformNode.cpp - Transform Node Implementation
  *
  * Implementation of 3D transformation functionality including
  * position, rotation, scale, and matrix calculations.
@@ -8,8 +8,8 @@
  * @date 2026-03-04
  */
 
-#include "../../include/AIEngine/components/TransformComponent.hpp"
-#include "../../include/AIEngine/scene/SceneNode.hpp"
+#include <AIEngine/nodes/TransformNode.hpp>
+#include <AIEngine/scene/SceneNode.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,7 +19,7 @@
 
 namespace AIEngine {
 
-TransformComponent::TransformComponent()
+TransformNode::TransformNode()
     : m_position(0.0f, 0.0f, 0.0f),
       m_rotation(1.0f, 0.0f, 0.0f, 0.0f) // Identity quaternion
       ,
@@ -27,48 +27,47 @@ TransformComponent::TransformComponent()
       ,
       m_isDirty(true) {}
 
-TransformComponent::TransformComponent(const glm::vec3 &position,
-                                       const glm::quat &rotation,
-                                       const glm::vec3 &scale)
+TransformNode::TransformNode(const glm::vec3 &position,
+                             const glm::quat &rotation, const glm::vec3 &scale)
     : m_position(position), m_rotation(rotation), m_scale(scale),
       m_localMatrix(1.0f), m_isDirty(true) {}
 
 // --- Position Methods ---
 
-void TransformComponent::SetPosition(const glm::vec3 &position) {
+void TransformNode::SetPosition(const glm::vec3 &position) {
   if (m_position != position) {
     m_position = position;
     MarkDirty();
   }
 }
 
-void TransformComponent::SetPosition(float x, float y, float z) {
+void TransformNode::SetPosition(float x, float y, float z) {
   SetPosition(glm::vec3(x, y, z));
 }
 
-void TransformComponent::Translate(const glm::vec3 &offset) {
+void TransformNode::Translate(const glm::vec3 &offset) {
   SetPosition(m_position + offset);
 }
 
-void TransformComponent::Translate(float x, float y, float z) {
+void TransformNode::Translate(float x, float y, float z) {
   Translate(glm::vec3(x, y, z));
 }
 
 // --- Rotation Methods ---
 
-void TransformComponent::SetRotation(const glm::quat &rotation) {
+void TransformNode::SetRotation(const glm::quat &rotation) {
   m_rotation = glm::normalize(rotation);
   MarkDirty();
 }
 
-void TransformComponent::SetRotationEuler(float pitch, float yaw, float roll) {
+void TransformNode::SetRotationEuler(float pitch, float yaw, float roll) {
   // Convert degrees to radians and create quaternion
   glm::vec3 radians = glm::radians(glm::vec3(pitch, yaw, roll));
   m_rotation = glm::quat(radians);
   MarkDirty();
 }
 
-void TransformComponent::LookAt(const glm::vec3 &target, const glm::vec3 &up) {
+void TransformNode::LookAt(const glm::vec3 &target, const glm::vec3 &up) {
   glm::vec3 forward = glm::normalize(target - m_position);
   glm::vec3 right = glm::normalize(glm::cross(forward, up));
   glm::vec3 newUp = glm::cross(right, forward);
@@ -83,19 +82,18 @@ void TransformComponent::LookAt(const glm::vec3 &target, const glm::vec3 &up) {
   MarkDirty();
 }
 
-glm::vec3 TransformComponent::GetEulerAngles() const {
+glm::vec3 TransformNode::GetEulerAngles() const {
   // Convert quaternion to Euler angles and return in degrees
   glm::vec3 radians = glm::eulerAngles(m_rotation);
   return glm::degrees(radians);
 }
 
-void TransformComponent::Rotate(const glm::quat &rotation) {
+void TransformNode::Rotate(const glm::quat &rotation) {
   m_rotation = glm::normalize(m_rotation * rotation);
   MarkDirty();
 }
 
-void TransformComponent::RotateAround(const glm::vec3 &axis,
-                                      float angleDegrees) {
+void TransformNode::RotateAround(const glm::vec3 &axis, float angleDegrees) {
   float angleRadians = glm::radians(angleDegrees);
   glm::quat rotation = glm::angleAxis(angleRadians, glm::normalize(axis));
   Rotate(rotation);
@@ -103,41 +101,41 @@ void TransformComponent::RotateAround(const glm::vec3 &axis,
 
 // --- Scale Methods ---
 
-void TransformComponent::SetScale(float uniformScale) {
+void TransformNode::SetScale(float uniformScale) {
   SetScale(glm::vec3(uniformScale));
 }
 
-void TransformComponent::SetScale(const glm::vec3 &scale) {
+void TransformNode::SetScale(const glm::vec3 &scale) {
   if (m_scale != scale) {
     m_scale = scale;
     MarkDirty();
   }
 }
 
-void TransformComponent::SetScale(float x, float y, float z) {
+void TransformNode::SetScale(float x, float y, float z) {
   SetScale(glm::vec3(x, y, z));
 }
 
-void TransformComponent::Scale(const glm::vec3 &scaleMultiplier) {
+void TransformNode::Scale(const glm::vec3 &scaleMultiplier) {
   SetScale(m_scale * scaleMultiplier);
 }
 
 // --- Matrix Methods ---
 
-const glm::mat4 &TransformComponent::GetLocalMatrix() const {
+const glm::mat4 &TransformNode::GetLocalMatrix() const {
   UpdateMatrixIfDirty();
   return m_localMatrix;
 }
 
-glm::mat4 TransformComponent::GetWorldMatrix() const {
+glm::mat4 TransformNode::GetWorldMatrix() const {
   glm::mat4 worldMatrix = GetLocalMatrix();
 
-  // If this component belongs to a node, check for parent transforms
+  // If this node belongs to a scene node, check for parent transforms
   if (GetOwner() && GetOwner()->GetParent()) {
     SceneNode *parent = GetOwner()->GetParent();
 
-    // Look for parent transform component
-    if (auto *parentTransform = parent->GetComponent<TransformComponent>()) {
+    // Look for parent transform node
+    if (auto *parentTransform = parent->GetNode<TransformNode>()) {
       // Multiply by parent's world matrix (parent transforms apply first)
       worldMatrix = parentTransform->GetWorldMatrix() * worldMatrix;
     }
@@ -146,68 +144,56 @@ glm::mat4 TransformComponent::GetWorldMatrix() const {
   return worldMatrix;
 }
 
-glm::mat4 TransformComponent::GetInverseWorldMatrix() const {
+glm::mat4 TransformNode::GetInverseWorldMatrix() const {
   return glm::inverse(GetWorldMatrix());
 }
 
 // --- Direction Vectors ---
 
-glm::vec3 TransformComponent::GetForward() const {
+glm::vec3 TransformNode::GetForward() const {
   // Forward is typically -Z in OpenGL coordinate system
   glm::vec4 forward =
       glm::mat4_cast(m_rotation) * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
   return glm::normalize(glm::vec3(forward));
 }
 
-glm::vec3 TransformComponent::GetRight() const {
+glm::vec3 TransformNode::GetRight() const {
   // Right is typically +X
   glm::vec4 right =
       glm::mat4_cast(m_rotation) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
   return glm::normalize(glm::vec3(right));
 }
 
-glm::vec3 TransformComponent::GetUp() const {
+glm::vec3 TransformNode::GetUp() const {
   // Up is typically +Y
   glm::vec4 up = glm::mat4_cast(m_rotation) * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
   return glm::normalize(glm::vec3(up));
 }
 
-// --- Component Interface ---
+// --- Node Interface ---
 
-void TransformComponent::OnAttach(SceneNode *owner) {
-  Component::OnAttach(owner);
+void TransformNode::OnAttach(SceneNode *owner) {
+  Node::OnAttach(owner);
   // No special attachment logic needed for transforms
-}
-
-void TransformComponent::OnUpdate(double deltaTime) {
-  (void)deltaTime; // Suppress unused parameter warning
-
-  // Transform components are typically passive - they don't need
-  // to update themselves each frame unless there's animation logic
-
-  // Future enhancements could include:
-  // - Animation interpolation
-  // - Physics integration
-  // - Constraint solving
 }
 
 // --- Utility Methods ---
 
-void TransformComponent::Reset() {
+void TransformNode::Reset() {
   m_position = glm::vec3(0.0f, 0.0f, 0.0f);
   m_rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f); // Identity
   m_scale = glm::vec3(1.0f, 1.0f, 1.0f);
   MarkDirty();
 }
 
-void TransformComponent::CopyFrom(const TransformComponent &other) {
+void TransformNode::CopyFrom(const TransformNode &other) {
   m_position = other.m_position;
   m_rotation = other.m_rotation;
   m_scale = other.m_scale;
   MarkDirty();
 }
 
-std::string TransformComponent::ToString() const {
+std::string TransformNode::ToString() const {
   std::stringstream ss;
   ss << "Transform(\n";
   ss << "  Position: " << glm::to_string(m_position) << "\n";
@@ -220,14 +206,14 @@ std::string TransformComponent::ToString() const {
 
 // --- Private Methods ---
 
-void TransformComponent::UpdateMatrixIfDirty() const {
+void TransformNode::UpdateMatrixIfDirty() const {
   if (m_isDirty) {
     m_localMatrix = CalculateMatrix();
     m_isDirty = false;
   }
 }
 
-glm::mat4 TransformComponent::CalculateMatrix() const {
+glm::mat4 TransformNode::CalculateMatrix() const {
   // Standard TRS (Translate * Rotate * Scale) matrix calculation
 
   // Scale matrix

@@ -285,31 +285,35 @@ void TestGame::CreateTestObjects() {
     return;
   }
 
-  // Add transform component
-  auto *transform = testNode->AddComponent<AIEngine::TransformComponent>();
+  // Add transform node
+  auto *transform = testNode->SetNode<AIEngine::TransformNode>();
   if (transform) {
     // Position the cube perfectly centered in front of the camera
     transform->SetPosition(0.0f, 0.0f, -5.0f);
     transform->SetScale(1.0f, 1.0f, 1.0f);
     transform->SetRotationEuler(0.0f, 45.0f, 0.0f); // Rotate 45 degrees
-    std::cout << "TestGame: Transform component added to test object.\n";
+    std::cout << "TestGame: Transform node added to test object.\n";
   } else {
-    std::cerr << "TestGame: Failed to add transform component!\n";
+    std::cerr << "TestGame: Failed to add transform node!\n";
   }
 
-  // Add render component
-  auto *render = testNode->AddComponent<AIEngine::RenderComponent>();
+  // Create a child scene node for the render node (each SceneNode holds one
+  // INode)
+  auto renderSceneNode =
+      std::make_unique<AIEngine::SceneNode>("TestObject/Render");
+  auto *render = renderSceneNode->SetNode<AIEngine::RenderNode>();
   if (render) {
     render->SetMeshId("test_cube");
     render->SetVisible(true);
     render->SetColor(0.8f, 0.4f, 0.2f); // Orange color
-    std::cout << "TestGame: Render component added to test object.\n";
+    std::cout << "TestGame: Render node added to test object.\n";
   } else {
-    std::cerr << "TestGame: Failed to add render component!\n";
+    std::cerr << "TestGame: Failed to add render node!\n";
   }
 
   // Add to scene
   m_testObject = m_rootNode->AddChild(std::move(testNode));
+  m_testObject->AddChild(std::move(renderSceneNode));
 
   std::cout << "TestGame: Test object created and added to scene.\n";
 }
@@ -323,10 +327,10 @@ void TestGame::SetupCamera() {
   }
 
   // Add transform for camera positioning
-  auto *cameraTransform =
-      cameraNode->AddComponent<AIEngine::TransformComponent>();
+  auto *cameraTransform = cameraNode->SetNode<AIEngine::TransformNode>();
   if (cameraTransform) {
     // Position camera to look at scene
+    // TODO: Broken Camera does not actually effect view.
     cameraTransform->SetPosition(0.0f, 2.0f, 5.0f);
     cameraTransform->LookAt(glm::vec3(0.0f, 0.0f, 0.0f)); // Look at origin
     std::cout << "TestGame: Camera positioned and oriented.\n";
@@ -338,6 +342,8 @@ void TestGame::SetupCamera() {
   std::cout << "TestGame: Camera created and added to scene.\n";
 }
 
+// TODO: Update loop should not be part of the player but instead registered
+// with the game engine.
 void TestGame::Update(double deltaTime) {
   // Update engine systems
   if (m_engine) {
@@ -346,8 +352,7 @@ void TestGame::Update(double deltaTime) {
 
   // Example: Rotate the test object
   if (m_testObject) {
-    auto *transform =
-        m_testObject->GetComponent<AIEngine::TransformComponent>();
+    auto *transform = m_testObject->GetNode<AIEngine::TransformNode>();
     if (transform) {
       // Rotate around Y axis at 30 degrees per second
       float rotationSpeed = 30.0f; // degrees per second
@@ -417,13 +422,14 @@ void TestGame::PrintDebugInfo() {
   std::cout << "Delta Time: " << std::setprecision(4) << m_deltaTime << "s\n";
 
   if (m_sceneGraph) {
-    std::cout << "Scene Nodes: " << m_sceneGraph->GetNodeCount() << "\n";
-    std::cout << "Active Nodes: " << m_sceneGraph->GetActiveNodeCount() << "\n";
+    // TODO: Efficient scene graph statistics.
+    // std::cout << "Scene Nodes: " << m_sceneGraph->GetNodeCount() << "\n";
+    // std::cout << "Active Nodes: " << m_sceneGraph->GetActiveNodeCount() <<
+    // "\n";
   }
 
   if (m_testObject) {
-    auto *transform =
-        m_testObject->GetComponent<AIEngine::TransformComponent>();
+    auto *transform = m_testObject->GetNode<AIEngine::TransformNode>();
     if (transform) {
       glm::vec3 pos = transform->GetPosition();
       glm::vec3 euler = transform->GetEulerAngles();

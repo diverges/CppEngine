@@ -1,5 +1,5 @@
 /**
- * TransformComponent.hpp - 3D Transform Component Declaration
+ * TransformNode.hpp - 3D Transform Node Declaration
  *
  * Provides position, rotation, and scale transformation for scene nodes.
  * Integrates with GLM mathematics library for efficient matrix operations.
@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "../core/Component.hpp"
+#include <AIEngine/core/Node.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -18,7 +18,7 @@
 namespace AIEngine {
 
 /**
- * @brief 3D Transform Component
+ * @brief 3D Transform Node
  *
  * Handles position, rotation, and scale transformations for scene objects.
  * Provides matrix calculations and coordinate space transformations.
@@ -34,7 +34,7 @@ namespace AIEngine {
  * @example Basic Transform Usage
  * @code
  * // Add transform to a scene node
- * auto* transform = node->AddComponent<TransformComponent>();
+ * auto* transform = node->AddNode<TransformNode>();
  *
  * // Set position
  * transform->SetPosition(10.0f, 5.0f, -3.0f);
@@ -50,12 +50,12 @@ namespace AIEngine {
  * glm::mat4 matrix = transform->GetWorldMatrix();
  * @endcode
  */
-class TransformComponent : public Component<TransformComponent> {
+class TransformNode : public Node<TransformNode> {
 public:
   /**
    * @brief Construct transform with identity values
    */
-  TransformComponent();
+  TransformNode();
 
   /**
    * @brief Construct transform with initial values
@@ -63,14 +63,14 @@ public:
    * @param rotation Initial rotation quaternion
    * @param scale Initial scale
    */
-  TransformComponent(const glm::vec3 &position,
-                     const glm::quat &rotation = glm::quat(1, 0, 0, 0),
-                     const glm::vec3 &scale = glm::vec3(1.0f));
+  TransformNode(const glm::vec3 &position,
+                const glm::quat &rotation = glm::quat(1, 0, 0, 0),
+                const glm::vec3 &scale = glm::vec3(1.0f));
 
   /**
    * @brief Virtual destructor
    */
-  virtual ~TransformComponent() = default;
+  virtual ~TransformNode() = default;
 
   // --- Position Methods ---
 
@@ -236,19 +236,13 @@ public:
    */
   glm::vec3 GetUp() const;
 
-  // --- Component Interface ---
+  // --- Node Interface ---
 
   /**
-   * @brief Called when component is attached to a node
-   * @param owner The scene node this component belongs to
+   * @brief Called when node is attached to a scene node
+   * @param owner The scene node this node belongs to
    */
   void OnAttach(SceneNode *owner) override;
-
-  /**
-   * @brief Called each frame for component updates
-   * @param deltaTime Time elapsed since last frame
-   */
-  void OnUpdate(double deltaTime) override;
 
   // --- Utility Methods ---
 
@@ -261,9 +255,9 @@ public:
 
   /**
    * @brief Copy transform values from another transform
-   * @param other Transform component to copy from
+   * @param other TransformNode to copy from
    */
-  void CopyFrom(const TransformComponent &other);
+  void CopyFrom(const TransformNode &other);
 
   /**
    * @brief Check if transform has changed since last matrix calculation

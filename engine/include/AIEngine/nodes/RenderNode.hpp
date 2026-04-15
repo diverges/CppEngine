@@ -1,5 +1,5 @@
 /**
- * RenderComponent.hpp - Render Component Declaration
+ * RenderNode.hpp - Render Node Declaration
  *
  * Provides visual rendering capability for scene objects including
  * mesh references, material properties, visibility control, and
@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "../core/Component.hpp"
+#include <AIEngine/core/Node.hpp>
 #include <cstdint>
 #include <string>
 
@@ -23,7 +23,7 @@ class Mesh;
 class Material;
 
 /**
- * @brief Render Component for Visual Objects
+ * @brief Render Node for Visual Objects
  *
  * Manages the visual representation of scene objects by storing
  * references to mesh geometry, materials, and rendering properties.
@@ -37,10 +37,10 @@ class Material;
  * - Culling and LOD support
  * - Animation and shader state management
  *
- * @example Basic Render Component Usage
+ * @example Basic Render Node Usage
  * @code
- * // Add render component to scene node
- * auto* render = node->AddComponent<RenderComponent>();
+ * // Add render node to scene node
+ * auto* render = node->AddNode<RenderNode>();
  *
  * // Set mesh (assume mesh is loaded)
  * render->SetMeshId("cube_mesh");
@@ -52,27 +52,25 @@ class Material;
  * // Set material properties
  * render->SetColor(1.0f, 0.5f, 0.2f); // Orange color
  * render->SetAlpha(0.8f); // Semi-transparent
- *
- * // Component will automatically render during scene render phase
  * @endcode
  */
-class RenderComponent : public Component<RenderComponent> {
+class RenderNode : public Node<RenderNode> {
 public:
   /**
-   * @brief Construct render component with default settings
+   * @brief Construct render node with default settings
    */
-  RenderComponent();
+  RenderNode();
 
   /**
-   * @brief Construct render component with mesh ID
+   * @brief Construct render node with mesh ID
    * @param meshId Identifier for mesh to render
    */
-  explicit RenderComponent(const std::string &meshId);
+  explicit RenderNode(const std::string &meshId);
 
   /**
    * @brief Virtual destructor
    */
-  virtual ~RenderComponent() = default;
+  virtual ~RenderNode() = default;
 
   // --- Mesh Management ---
 
@@ -89,7 +87,7 @@ public:
   const std::string &GetMeshId() const { return m_meshId; }
 
   /**
-   * @brief Check if component has a valid mesh assigned
+   * @brief Check if node has a valid mesh assigned
    * @return true if mesh ID is set and non-empty
    */
   bool HasMesh() const { return !m_meshId.empty(); }
@@ -185,7 +183,7 @@ public:
   const std::string &GetMaterialId() const { return m_materialId; }
 
   /**
-   * @brief Check if component has material assigned
+   * @brief Check if node has material assigned
    * @return true if material ID is set
    */
   bool HasMaterial() const { return !m_materialId.empty(); }
@@ -203,7 +201,7 @@ public:
   const std::string &GetTextureId() const { return m_textureId; }
 
   /**
-   * @brief Check if component has texture assigned
+   * @brief Check if node has texture assigned
    * @return true if texture ID is set
    */
   bool HasTexture() const { return !m_textureId.empty(); }
@@ -248,55 +246,49 @@ public:
    */
   bool GetReceiveShadows() const { return m_receiveShadows; }
 
-  // --- Component Interface ---
+  // --- Node Interface ---
 
   /**
-   * @brief Called when component is attached to scene node
-   * @param owner The scene node this component belongs to
+   * @brief Called when node is attached to scene node
+   * @param owner The scene node this node belongs to
    */
   void OnAttach(SceneNode *owner) override;
 
-  /**
-   * @brief Called each frame for component updates
-   * @param deltaTime Time elapsed since last frame
-   */
-  void OnUpdate(double deltaTime) override;
+  // --- Utility Methods ---
 
   /**
    * @brief Called during rendering phase
    * @param renderer The active renderer for drawing operations
    */
-  void OnRender(Renderer *renderer) override;
-
-  // --- Utility Methods ---
+  void OnRender(Renderer *renderer);
 
   /**
-   * @brief Reset render component to default state
+   * @brief Reset render node to default state
    */
   void Reset();
 
   /**
-   * @brief Copy render settings from another component
-   * @param other Render component to copy from
+   * @brief Copy render settings from another node
+   * @param other RenderNode to copy from
    */
-  void CopyFrom(const RenderComponent &other);
+  void CopyFrom(const RenderNode &other);
 
   /**
-   * @brief Check if component is ready for rendering
-   * @return true if component has mesh and is visible
+   * @brief Check if node is ready for rendering
+   * @return true if node has mesh and is visible
    */
   bool IsReadyToRender() const;
 
   /**
    * @brief Get string representation for debugging
-   * @return String containing render component state
+   * @return String containing render node state
    */
   std::string ToString() const;
 
   // --- Performance Tracking ---
 
   /**
-   * @brief Get number of times this component was rendered
+   * @brief Get number of times this node was rendered
    * @return Render count since last reset
    */
   uint32_t GetRenderCount() const { return m_renderCount; }
