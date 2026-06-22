@@ -1,5 +1,20 @@
 cmake_minimum_required(VERSION 3.20)
+
 project(AIEngine VERSION 1.0.0 LANGUAGES CXX)
+
+# ---------------------------------------------------------------------------
+# Post-project configure summary — resolved toolchain details.
+# ---------------------------------------------------------------------------
+message(STATUS "CMAKE RESOLVED CONFIGURATION")
+message(STATUS "Resolved generator: ${CMAKE_GENERATOR}")
+message(STATUS "Resolved build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Resolved C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "Resolved CXX compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "CXX compiler id: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CXX flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "CXX flags (Debug): ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CXX flags (Release): ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
 
 # ---------------------------------------------------------------------------
 # MinGW/UCRT64 workaround: CMake 4.x applies two problematic patterns on

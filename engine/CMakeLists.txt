@@ -37,7 +37,6 @@ target_link_libraries(AIEngine
         SDL2::main
         GLEW::GLEW
         GLM::GLM
-        GLAD::GLAD
 )
 
 # Windows system libraries required by SDL2 / OpenGL

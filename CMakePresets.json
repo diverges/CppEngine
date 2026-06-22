@@ -1,39 +1,77 @@
 {
-    "version": 3,
+    "version": 6,
     "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
         {
             "name": "debug",
             "displayName": "Debug",
             "description": "Debug build: symbols enabled, no optimization, output to bin/debug/",
-            "generator": "MinGW Makefiles",
-            "binaryDir": "${sourceDir}/build/debug",
+            "inherits": ["base"],
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
             "name": "release",
             "displayName": "Release",
             "description": "Release build: full optimization, no debug symbols, output to bin/release/",
-            "generator": "MinGW Makefiles",
-            "binaryDir": "${sourceDir}/build/release",
+            "inherits": ["base"],
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "debug-clang",
+            "displayName": "Debug (Clang)",
+            "description": "Debug build using clang/clang++",
+            "inherits": ["debug"],
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "release-clang",
+            "displayName": "Release (Clang)",
+            "description": "Release build using clang/clang++",
+            "inherits": ["release"],
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "clang",
+                "CMAKE_CXX_COMPILER": "clang++"
             }
         }
     ],
     "buildPresets": [
         {
             "name": "debug",
-            "displayName": "Build Debug",
-            "configurePreset": "debug"
+            "configurePreset": "debug",
+            "description": "Build debug with verbose compile/link output",
+            "verbose": true
         },
         {
             "name": "release",
-            "displayName": "Build Release",
-            "configurePreset": "release"
+            "configurePreset": "release",
+            "description": "Build release with verbose compile/link output",
+            "verbose": true
+        },
+        {
+            "name": "debug-clang",
+            "configurePreset": "debug-clang",
+            "description": "Build debug-clang with verbose compile/link output",
+            "verbose": true
+        },
+        {
+            "name": "release-clang",
+            "configurePreset": "release-clang",
+            "description": "Build release-clang with verbose compile/link output",
+            "verbose": true
         }
     ]
 }

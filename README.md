@@ -76,6 +76,25 @@ cmake --build --preset release
 # ✅ Output: bin/release/libAIEngine.a  bin/release/testgame.exe
 ```
 
+### Choose compiler (Clang example)
+
+```bash
+# Configure with clang/clang++
+cmake --preset debug-clang
+cmake --build --preset debug-clang
+
+# Release with clang/clang++
+cmake --preset release-clang
+cmake --build --preset release-clang
+```
+
+If CMake says a compiler is already cached, remove the matching build folder first:
+
+```bash
+# PowerShell
+Remove-Item -Recurse -Force .\build\debug-clang, .\build\release-clang
+```
+
 ### Run the demo
 
 ```bash
